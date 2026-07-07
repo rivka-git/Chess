@@ -62,3 +62,26 @@ def parse_board(board_string: str) -> Board:
         board_rows.append(normalized_parts)
 
     return Board(board_rows)
+
+
+def parse_commands(board_string: str) -> list[str]:
+    """Extract the command lines that follow the Commands section."""
+    if not board_string or not board_string.strip():
+        return []
+
+    commands: list[str] = []
+    in_commands = False
+
+    for raw_line in board_string.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+
+        if line == "Commands:":
+            in_commands = True
+            continue
+
+        if in_commands:
+            commands.append(line)
+
+    return commands
