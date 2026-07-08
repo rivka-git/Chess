@@ -53,7 +53,7 @@ wR wP .
 Commands:
 click 50 50
 click 250 50
-wait 2000
+wait 1000
 print board
 """
 

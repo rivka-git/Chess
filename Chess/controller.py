@@ -23,6 +23,7 @@ class Controller:
 
     def click(self, x: int, y: int) -> None:
         """Handle a click at pixel coordinates, converting to a board cell."""
+        self._apply_arrived_moves()
         row = y // 100
         col = x // 100
 
@@ -42,13 +43,18 @@ class Controller:
             return
 
         if self.movement_rules.is_legal_move(self.board, self.selected_position, target_position):
-            arrival_time = self.time_ms + 2000
-            self.pending_moves.append((self.selected_position, target_position, arrival_time))
+            if not self.pending_moves:
+                arrival_time = self.time_ms + 1000
+                self.pending_moves.append((self.selected_position, target_position, arrival_time))
         self.selected_position = None
 
     def wait(self, milliseconds: int) -> None:
         """Advance the game clock by the provided number of milliseconds."""
         self.time_ms += milliseconds
+
+    def _is_piece_in_transit(self, position: tuple[int, int]) -> bool:
+        """Return whether a piece at the given position is already moving."""
+        return any(start == position for start, end, arrival_time in self.pending_moves)
 
     def _apply_arrived_moves(self) -> None:
         """Apply all pending moves whose arrival time has been reached."""
