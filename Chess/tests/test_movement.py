@@ -8,6 +8,8 @@ def test_king_can_move_one_step() -> None:
 
     controller.click(50, 50)
     controller.click(150, 50)
+    controller.wait(1000)
+    controller.print_board()
 
     assert controller.board.rows[0][1] == "wK"
 
@@ -17,6 +19,8 @@ def test_king_cannot_move_two_steps() -> None:
 
     controller.click(50, 50)
     controller.click(250, 50)
+    controller.wait(1000)
+    controller.print_board()
 
     assert controller.board.rows[0][0] == "wK"
     assert controller.board.rows[0][2] == "."
@@ -27,6 +31,8 @@ def test_rook_cannot_move_diagonally() -> None:
 
     controller.click(50, 50)
     controller.click(150, 150)
+    controller.wait(1000)
+    controller.print_board()
 
     assert controller.board.rows[0][0] == "wR"
     assert controller.board.rows[1][1] == "."
@@ -37,6 +43,8 @@ def test_knight_can_move_in_l_shape() -> None:
 
     controller.click(50, 50)
     controller.click(250, 150)
+    controller.wait(1000)
+    controller.print_board()
 
     assert controller.board.rows[1][2] == "wN"
 
@@ -46,6 +54,8 @@ def test_rook_cannot_move_through_blocker() -> None:
 
     controller.click(50, 50)
     controller.click(250, 50)
+    controller.wait(1000)
+    controller.print_board()
 
     assert controller.board.rows[0][0] == "wR"
     assert controller.board.rows[0][1] == "bB"
@@ -57,6 +67,8 @@ def test_rook_can_capture_enemy_piece_on_destination() -> None:
 
     controller.click(50, 50)
     controller.click(250, 50)
+    controller.wait(1000)
+    controller.print_board()
 
     assert controller.board.rows[0][0] == "."
     assert controller.board.rows[0][2] == "wR"
@@ -67,6 +79,8 @@ def test_white_pawn_moves_forward() -> None:
 
     controller.click(50, 150)
     controller.click(50, 50)
+    controller.wait(1000)
+    controller.print_board()
 
     assert controller.board.rows[0][0] == "wP"
     assert controller.board.rows[1][0] == "."
@@ -77,6 +91,8 @@ def test_black_pawn_moves_forward() -> None:
 
     controller.click(50, 50)
     controller.click(50, 150)
+    controller.wait(1000)
+    controller.print_board()
 
     assert controller.board.rows[1][0] == "bP"
     assert controller.board.rows[0][0] == "."
@@ -87,6 +103,8 @@ def test_pawn_captures_diagonally() -> None:
 
     controller.click(50, 150)
     controller.click(150, 50)
+    controller.wait(1000)
+    controller.print_board()
 
     assert controller.board.rows[0][1] == "wP"
     assert controller.board.rows[1][0] == "."
@@ -97,6 +115,8 @@ def test_pawn_cannot_move_two_steps() -> None:
 
     controller.click(50, 250)
     controller.click(50, 50)
+    controller.wait(1000)
+    controller.print_board()
 
     assert controller.board.rows[2][0] == "wP"
     assert controller.board.rows[0][0] == "."
@@ -107,6 +127,32 @@ def test_pawn_cannot_capture_forward() -> None:
 
     controller.click(50, 150)
     controller.click(50, 50)
+    controller.wait(1000)
+    controller.print_board()
 
     assert controller.board.rows[1][0] == "wP"
     assert controller.board.rows[0][0] == "bP"
+
+
+def test_piece_not_moved_before_arrival() -> None:
+    controller = Controller([["wK", "."], [".", "."]])
+
+    controller.click(50, 50)
+    controller.click(150, 50)
+    controller.wait(500)
+    controller.print_board()
+
+    assert controller.board.rows[0][0] == "wK"
+    assert controller.board.rows[0][1] == "."
+
+
+def test_piece_moved_after_arrival() -> None:
+    controller = Controller([["wK", "."], [".", "."]])
+
+    controller.click(50, 50)
+    controller.click(150, 50)
+    controller.wait(1000)
+    controller.print_board()
+
+    assert controller.board.rows[0][0] == "."
+    assert controller.board.rows[0][1] == "wK"

@@ -41,17 +41,29 @@ class Controller:
             self.selected_position = target_position
             return
 
-        self.pending_moves.append((self.selected_position, target_position))
         if self.movement_rules.is_legal_move(self.board, self.selected_position, target_position):
-            self.movement_rules.apply_move(self.board, self.selected_position, target_position)
+            arrival_time = self.time_ms + 1000
+            self.pending_moves.append((self.selected_position, target_position, arrival_time))
         self.selected_position = None
 
     def wait(self, milliseconds: int) -> None:
         """Advance the game clock by the provided number of milliseconds."""
         self.time_ms += milliseconds
 
+    def _apply_arrived_moves(self) -> None:
+        """Apply all pending moves whose arrival time has been reached."""
+        remaining = []
+        for move in self.pending_moves:
+            start, end, arrival_time = move
+            if self.time_ms >= arrival_time:
+                self.movement_rules.apply_move(self.board, start, end)
+            else:
+                remaining.append(move)
+        self.pending_moves = remaining
+
     def print_board(self) -> str:
         """Return the current settled board state after completed moves."""
+        self._apply_arrived_moves()
         return self.board.to_canonical_string()
 
     def _is_own_piece(self, start: tuple[int, int], end: tuple[int, int]) -> bool:
