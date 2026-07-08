@@ -8,7 +8,8 @@ from controller import Controller
 from parser import parse_board, parse_commands
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Run the board interaction program from standard input."""
     board_input = sys.stdin.read()
     try:
         board = parse_board(board_input)
@@ -29,3 +30,7 @@ if __name__ == "__main__":
 
     except ValueError as error:
         print(f"ERROR {error}")
+
+
+if __name__ == "__main__":
+    main()

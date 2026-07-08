@@ -60,3 +60,53 @@ def test_rook_can_capture_enemy_piece_on_destination() -> None:
 
     assert controller.board.rows[0][0] == "."
     assert controller.board.rows[0][2] == "wR"
+
+
+def test_white_pawn_moves_forward() -> None:
+    controller = Controller([[".", "."], ["wP", "."]])
+
+    controller.click(50, 150)
+    controller.click(50, 50)
+
+    assert controller.board.rows[0][0] == "wP"
+    assert controller.board.rows[1][0] == "."
+
+
+def test_black_pawn_moves_forward() -> None:
+    controller = Controller([["bP", "."], [".", "."]])
+
+    controller.click(50, 50)
+    controller.click(50, 150)
+
+    assert controller.board.rows[1][0] == "bP"
+    assert controller.board.rows[0][0] == "."
+
+
+def test_pawn_captures_diagonally() -> None:
+    controller = Controller([[".", "bP"], ["wP", "."]])
+
+    controller.click(50, 150)
+    controller.click(150, 50)
+
+    assert controller.board.rows[0][1] == "wP"
+    assert controller.board.rows[1][0] == "."
+
+
+def test_pawn_cannot_move_two_steps() -> None:
+    controller = Controller([[".", "."], [".", "."], ["wP", "."]])
+
+    controller.click(50, 250)
+    controller.click(50, 50)
+
+    assert controller.board.rows[2][0] == "wP"
+    assert controller.board.rows[0][0] == "."
+
+
+def test_pawn_cannot_capture_forward() -> None:
+    controller = Controller([["bP", "."], ["wP", "."]])
+
+    controller.click(50, 150)
+    controller.click(50, 50)
+
+    assert controller.board.rows[1][0] == "wP"
+    assert controller.board.rows[0][0] == "bP"

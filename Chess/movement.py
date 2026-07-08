@@ -2,11 +2,29 @@
 
 from __future__ import annotations
 
+from typing import Callable
+
 from board import Board
+
+MoveChecker = Callable[["MovementRules", Board, tuple[int, int], tuple[int, int], int, int, int, int], bool]
 
 
 class MovementRules:
     """Encapsulate movement validation and application for the current board."""
+
+    def __init__(self) -> None:
+        self._piece_rules: dict[str, MoveChecker] = {
+            "K": MovementRules._king_move,
+            "R": MovementRules._rook_move,
+            "B": MovementRules._bishop_move,
+            "Q": MovementRules._queen_move,
+            "N": MovementRules._knight_move,
+            "P": MovementRules._pawn_move,
+        }
+
+    def register(self, piece_type: str, checker: MoveChecker) -> None:
+        """Register a custom movement rule for a piece type."""
+        self._piece_rules[piece_type] = checker
 
     def is_legal_move(self, board: Board, start: tuple[int, int], end: tuple[int, int]) -> bool:
         """Return whether the requested move is legal according to the current rules."""
@@ -27,20 +45,46 @@ class MovementRules:
         abs_row = abs(row_delta)
         abs_col = abs(col_delta)
 
-        if piece_type == "K":
-            return (abs_row, abs_col) in {(0, 1), (1, 0), (1, 1)}
-        if piece_type == "R":
-            return (row_delta == 0 or col_delta == 0) and self._is_path_clear(board, start, end)
-        if piece_type == "B":
-            return abs_row == abs_col and self._is_path_clear(board, start, end)
-        if piece_type == "Q":
-            return (
-                (row_delta == 0 or col_delta == 0 or abs_row == abs_col)
-                and self._is_path_clear(board, start, end)
-            )
-        if piece_type == "N":
-            return {abs_row, abs_col} == {1, 2}
+        checker = self._piece_rules.get(piece_type)
+        if checker is None:
+            return False
+        return checker(self, board, start, end, row_delta, col_delta, abs_row, abs_col)
 
+    @staticmethod
+    def _king_move(self: "MovementRules", board: Board, start: tuple[int, int], end: tuple[int, int], row_delta: int, col_delta: int, abs_row: int, abs_col: int) -> bool:
+        return (abs_row, abs_col) in {(0, 1), (1, 0), (1, 1)}
+
+    @staticmethod
+    def _rook_move(self: "MovementRules", board: Board, start: tuple[int, int], end: tuple[int, int], row_delta: int, col_delta: int, abs_row: int, abs_col: int) -> bool:
+        return (row_delta == 0 or col_delta == 0) and self._is_path_clear(board, start, end)
+
+    @staticmethod
+    def _bishop_move(self: "MovementRules", board: Board, start: tuple[int, int], end: tuple[int, int], row_delta: int, col_delta: int, abs_row: int, abs_col: int) -> bool:
+        return abs_row == abs_col and self._is_path_clear(board, start, end)
+
+    @staticmethod
+    def _queen_move(self: "MovementRules", board: Board, start: tuple[int, int], end: tuple[int, int], row_delta: int, col_delta: int, abs_row: int, abs_col: int) -> bool:
+        return (
+            (row_delta == 0 or col_delta == 0 or abs_row == abs_col)
+            and self._is_path_clear(board, start, end)
+        )
+
+    @staticmethod
+    def _knight_move(self: "MovementRules", board: Board, start: tuple[int, int], end: tuple[int, int], row_delta: int, col_delta: int, abs_row: int, abs_col: int) -> bool:
+        return {abs_row, abs_col} == {1, 2}
+
+    @staticmethod
+    def _pawn_move(self: "MovementRules", board: Board, start: tuple[int, int], end: tuple[int, int], row_delta: int, col_delta: int, abs_row: int, abs_col: int) -> bool:
+        start_row, start_col = start
+        end_row, end_col = end
+        color = self._get_piece_color(board.rows[start_row][start_col])
+        direction = -1 if color == "w" else 1
+        target = board.rows[end_row][end_col]
+
+        if col_delta == 0 and row_delta == direction:
+            return target == "."
+        if abs_col == 1 and row_delta == direction:
+            return target != "." and self._get_piece_color(target) != color
         return False
 
     def apply_move(self, board: Board, start: tuple[int, int], end: tuple[int, int]) -> None:
