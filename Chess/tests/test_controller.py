@@ -1,6 +1,7 @@
 """Tests for the controller behavior in iteration 2."""
 
 from controller import Controller
+from movement import MovementRules
 
 
 def test_click_selects_friendly_piece() -> None:
@@ -31,3 +32,11 @@ def test_click_outside_board_is_ignored() -> None:
 
     assert controller.selected_position is None
     assert controller.pending_moves == []
+
+
+def test_controller_accepts_injected_movement_rules() -> None:
+    """The controller should be able to use movement rules provided by the caller."""
+    movement_rules = MovementRules()
+    controller = Controller([["wK", "."], [".", "bR"]], movement_rules=movement_rules)
+
+    assert controller.movement_rules is movement_rules
