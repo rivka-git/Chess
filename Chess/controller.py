@@ -54,6 +54,15 @@ class Controller:
     def wait(self, milliseconds: int) -> None:
         """Advance the game clock by the provided number of milliseconds."""
         self.time_ms += milliseconds
+        self._apply_arrived_moves()
+
+    def _promote_pawns(self) -> None:
+        """Promote any pawn that has reached the last row to a queen."""
+        for col in range(self.board.width):
+            if self.board.rows[0][col] == "wP":
+                self.board.rows[0][col] = "wQ"
+            if self.board.rows[self.board.height - 1][col] == "bP":
+                self.board.rows[self.board.height - 1][col] = "bQ"
 
     def _is_piece_in_transit(self, position: tuple[int, int]) -> bool:
         """Return whether a piece at the given position is already moving."""
@@ -65,17 +74,21 @@ class Controller:
         for move in self.pending_moves:
             start, end, arrival_time = move
             if self.time_ms >= arrival_time:
+                pieces_before = [cell for row in self.board.rows for cell in row]
                 self.movement_rules.apply_move(self.board, start, end)
-                if self._is_king_captured():
+                self._promote_pawns()
+                pieces_after = [cell for row in self.board.rows for cell in row]
+                if ("wK" in pieces_before and "wK" not in pieces_after) or \
+                   ("bK" in pieces_before and "bK" not in pieces_after):
                     self.game_over = True
             else:
                 remaining.append(move)
         self.pending_moves = remaining
 
     def _is_king_captured(self) -> bool:
-        """Return whether either king is missing from the board."""
+        """Return whether a king that was on the board has been captured."""
         pieces = [cell for row in self.board.rows for cell in row]
-        return "wK" not in pieces or "bK" not in pieces
+        return "bK" not in pieces or "wK" not in pieces
 
     def print_board(self) -> str:
         """Return the current settled board state after completed moves."""

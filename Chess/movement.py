@@ -75,10 +75,14 @@ class MovementRules:
         end_row, end_col = end
         color = self._get_piece_color(board.rows[start_row][start_col])
         direction = -1 if color == "w" else 1
+        start_rank = board.height - 1 if color == "w" else 0
         target = board.rows[end_row][end_col]
 
         if col_delta == 0 and row_delta == direction:
             return target == "."
+        if col_delta == 0 and row_delta == 2 * direction and start_row == start_rank:
+            mid = board.rows[start_row + direction][start_col]
+            return target == "." and mid == "."
         if abs_col == 1 and row_delta == direction:
             return target != "." and self._get_piece_color(target) != color
         return False
