@@ -2,11 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Callable
-
 from board import Board
-
-MoveChecker = Callable[["MovementRules", Board, tuple[int, int], tuple[int, int], int, int, int, int], bool]
 
 
 class MovementRules:
@@ -22,7 +18,7 @@ class MovementRules:
             "P": MovementRules._pawn_move,
         }
 
-    def register(self, piece_type: str, checker: MoveChecker) -> None:
+    def register(self, piece_type: str, checker) -> None:
         """Register a custom movement rule for a piece type."""
         self._piece_rules[piece_type] = checker
 
