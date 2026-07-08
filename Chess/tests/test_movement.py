@@ -158,6 +158,33 @@ def test_piece_moved_after_arrival() -> None:
     assert controller.board.rows[0][1] == "wK"
 
 
+def test_capturing_enemy_king_ends_game() -> None:
+    controller = Controller([["wR", "bK"]])
+
+    controller.click(50, 50)
+    controller.click(150, 50)
+    controller.wait(1000)
+    controller.print_board()
+
+    assert controller.game_over is True
+
+
+def test_moves_ignored_after_game_over() -> None:
+    controller = Controller([["wR", "bK", "."]])
+
+    controller.click(50, 50)
+    controller.click(150, 50)
+    controller.wait(1000)
+    controller.print_board()
+    controller.click(150, 50)
+    controller.click(250, 50)
+    controller.wait(1000)
+    controller.print_board()
+
+    assert controller.board.rows[0][1] == "wR"
+    assert controller.board.rows[0][2] == "."
+
+
 def test_second_piece_blocked_while_first_in_transit() -> None:
     controller = Controller([["wR", ".", "."], [".", ".", "."], ["bR", ".", "."]])
 
@@ -173,11 +200,12 @@ def test_second_piece_blocked_while_first_in_transit() -> None:
 
 
 def test_piece_can_move_again_immediately_after_arrival() -> None:
-    controller = Controller([["wR", ".", "."]])
+    controller = Controller([["wR", ".", "."], ["wK", ".", "bK"]])
 
     controller.click(50, 50)
     controller.click(150, 50)
     controller.wait(1000)
+    controller.print_board()
     controller.click(150, 50)
     controller.click(250, 50)
     controller.wait(1000)

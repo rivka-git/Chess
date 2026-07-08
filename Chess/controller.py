@@ -19,11 +19,14 @@ class Controller:
         self.selected_position: tuple[int, int] | None = None
         self.pending_moves: list[tuple[tuple[int, int], tuple[int, int]]] = []
         self.time_ms = 0
+        self.game_over = False
         self.movement_rules = movement_rules or MovementRules()
 
     def click(self, x: int, y: int) -> None:
         """Handle a click at pixel coordinates, converting to a board cell."""
         self._apply_arrived_moves()
+        if self.game_over:
+            return
         row = y // 100
         col = x // 100
 
@@ -63,9 +66,16 @@ class Controller:
             start, end, arrival_time = move
             if self.time_ms >= arrival_time:
                 self.movement_rules.apply_move(self.board, start, end)
+                if self._is_king_captured():
+                    self.game_over = True
             else:
                 remaining.append(move)
         self.pending_moves = remaining
+
+    def _is_king_captured(self) -> bool:
+        """Return whether either king is missing from the board."""
+        pieces = [cell for row in self.board.rows for cell in row]
+        return "wK" not in pieces or "bK" not in pieces
 
     def print_board(self) -> str:
         """Return the current settled board state after completed moves."""
