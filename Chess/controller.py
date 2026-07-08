@@ -18,6 +18,7 @@ class Controller:
         self.board = Board(rows or [["."]])
         self.selected_position: tuple[int, int] | None = None
         self.pending_moves: list[tuple[tuple[int, int], tuple[int, int]]] = []
+        self.airborne: list[tuple[tuple[int, int], int]] = []
         self.time_ms = 0
         self.game_over = False
         self.movement_rules = movement_rules or MovementRules()
@@ -51,6 +52,24 @@ class Controller:
                 self.pending_moves.append((self.selected_position, target_position, arrival_time))
         self.selected_position = None
 
+    def jump(self, x: int, y: int) -> None:
+        """Make a piece jump, staying airborne for 1000ms to capture arriving enemies."""
+        self._apply_arrived_moves()
+        if self.game_over:
+            return
+        row = y // 100
+        col = x // 100
+        if not self._is_inside_board(row, col):
+            return
+        position = (row, col)
+        if self.board.rows[row][col] == ".":
+            return
+        if self._is_piece_in_transit(position):
+            return
+        if any(pos == position for pos, land_time in self.airborne):
+            return
+        self.airborne.append((position, self.time_ms + 1000))
+
     def wait(self, milliseconds: int) -> None:
         """Advance the game clock by the provided number of milliseconds."""
         self.time_ms += milliseconds
@@ -74,16 +93,21 @@ class Controller:
         for move in self.pending_moves:
             start, end, arrival_time = move
             if self.time_ms >= arrival_time:
-                pieces_before = [cell for row in self.board.rows for cell in row]
-                self.movement_rules.apply_move(self.board, start, end)
-                self._promote_pawns()
-                pieces_after = [cell for row in self.board.rows for cell in row]
-                if ("wK" in pieces_before and "wK" not in pieces_after) or \
-                   ("bK" in pieces_before and "bK" not in pieces_after):
-                    self.game_over = True
+                airborne_positions = [pos for pos, land_time in self.airborne if self.time_ms <= land_time]
+                if end in airborne_positions:
+                    self.board.rows[start[0]][start[1]] = "."
+                else:
+                    pieces_before = [cell for row in self.board.rows for cell in row]
+                    self.movement_rules.apply_move(self.board, start, end)
+                    self._promote_pawns()
+                    pieces_after = [cell for row in self.board.rows for cell in row]
+                    if ("wK" in pieces_before and "wK" not in pieces_after) or \
+                       ("bK" in pieces_before and "bK" not in pieces_after):
+                        self.game_over = True
             else:
                 remaining.append(move)
         self.pending_moves = remaining
+        self.airborne = [(pos, land_time) for pos, land_time in self.airborne if self.time_ms < land_time]
 
     def _is_king_captured(self) -> bool:
         """Return whether a king that was on the board has been captured."""

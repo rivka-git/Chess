@@ -253,3 +253,37 @@ def test_piece_can_move_again_immediately_after_arrival() -> None:
     controller.print_board()
 
     assert controller.board.rows[0][2] == "wR"
+
+
+def test_jump_captures_arriving_enemy() -> None:
+    controller = Controller([["wR", "bR", "."]])
+
+    controller.jump(50, 50)
+    controller.click(150, 50)
+    controller.click(250, 50)
+    controller.wait(1000)
+    controller.print_board()
+
+    assert controller.board.rows[0][0] == "wR"
+    assert controller.board.rows[0][1] == "."
+    assert controller.board.rows[0][2] == "."
+
+
+def test_jump_no_enemy_piece_lands_normally() -> None:
+    controller = Controller([["wR", ".", "."]])
+
+    controller.jump(50, 50)
+    controller.wait(1000)
+    controller.print_board()
+
+    assert controller.board.rows[0][0] == "wR"
+
+
+def test_moving_piece_cannot_jump() -> None:
+    controller = Controller([["wR", ".", "."]])
+
+    controller.click(50, 50)
+    controller.click(150, 50)
+    controller.jump(50, 50)
+
+    assert controller.airborne == []
