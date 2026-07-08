@@ -18,7 +18,7 @@ class MovementRules:
             "P": MovementRules._pawn_move,
         }
 
-    def register(self, piece_type: str, checker) -> None:
+    def register(self, piece_type: str, checker: object) -> None:
         """Register a custom movement rule for a piece type."""
         self._piece_rules[piece_type] = checker
 
