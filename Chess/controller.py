@@ -42,7 +42,7 @@ class Controller:
             return
 
         if self.movement_rules.is_legal_move(self.board, self.selected_position, target_position):
-            arrival_time = self.time_ms + 1000
+            arrival_time = self.time_ms + 2000
             self.pending_moves.append((self.selected_position, target_position, arrival_time))
         self.selected_position = None
 
