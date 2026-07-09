@@ -1,13 +1,12 @@
-"""Tests for the parser module."""
+"""Tests for the board parser."""
 
 import pytest
 
-from board import Board
-from parser import parse_board
+from model.board import Board
+from ioutils.board_parser import parse_board
 
 
 def test_parse_board_with_piece_tokens() -> None:
-    """Piece tokens such as wK and bQ should be preserved as single cells."""
     board = parse_board("Board:\nwK . . bK\n. . . .\nCommands:\nprint board")
 
     assert isinstance(board, Board)
@@ -17,12 +16,10 @@ def test_parse_board_with_piece_tokens() -> None:
 
 
 def test_parse_board_rejects_unknown_token() -> None:
-    """Unknown piece tokens should be rejected."""
     with pytest.raises(ValueError, match="UNKNOWN_TOKEN"):
         parse_board("Board:\nwK xZ\n. .\nCommands:")
 
 
 def test_parse_board_rejects_row_width_mismatch() -> None:
-    """Rows with different numbers of cells should be rejected."""
     with pytest.raises(ValueError, match="ROW_WIDTH_MISMATCH"):
         parse_board("Board:\nwK . .\n. bK\nCommands:")

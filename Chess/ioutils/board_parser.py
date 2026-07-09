@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from board import Board
-from movement import PieceRegistry, MovementRules
+from model.board import Board
+from rules.rule_engine import PieceRegistry, MovementRules
 
 
 def _extract_board_lines(board_string: str) -> list[str]:
-    """Extract the raw text lines that belong to the Board section."""
     board_lines: list[str] = []
     in_board = False
 
@@ -27,7 +26,6 @@ def _extract_board_lines(board_string: str) -> list[str]:
 
 
 def _parse_row(line: str, registry: PieceRegistry) -> list[str]:
-    """Parse and validate a single board row, returning a list of tokens."""
     tokens = []
     for part in line.split():
         if part != "." and (len(part) != 2 or part[0] not in {"w", "b"} or part[1] not in registry.rules):
@@ -37,7 +35,6 @@ def _parse_row(line: str, registry: PieceRegistry) -> list[str]:
 
 
 def parse_board(board_string: str, registry: PieceRegistry | None = None) -> Board:
-    """Parse a text board fixture into a Board instance."""
     if not board_string or not board_string.strip():
         raise ValueError("Board input cannot be empty.")
 
@@ -53,7 +50,6 @@ def parse_board(board_string: str, registry: PieceRegistry | None = None) -> Boa
 
 
 def parse_commands(board_string: str) -> list[str]:
-    """Extract the command lines that follow the Commands section."""
     if not board_string or not board_string.strip():
         return []
 
@@ -64,11 +60,9 @@ def parse_commands(board_string: str) -> list[str]:
         line = raw_line.strip()
         if not line:
             continue
-
         if line == "Commands:":
             in_commands = True
             continue
-
         if in_commands:
             commands.append(line)
 

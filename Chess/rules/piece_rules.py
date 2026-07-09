@@ -1,4 +1,4 @@
-"""Piece hierarchy for chess pieces."""
+"""Chess piece classes and movement geometry."""
 
 from __future__ import annotations
 
@@ -17,12 +17,7 @@ class Piece(ABC):
         """Return the single-character piece type, e.g. 'K', 'P'."""
 
     @abstractmethod
-    def is_legal_move(
-        self,
-        board: object,
-        start: tuple[int, int],
-        end: tuple[int, int],
-    ) -> bool:
+    def is_legal_move(self, board: object, start: tuple[int, int], end: tuple[int, int]) -> bool:
         """Return whether moving from start to end is legal for this piece."""
 
     def __str__(self) -> str:
@@ -30,13 +25,9 @@ class Piece(ABC):
 
     @staticmethod
     def from_token(token: str) -> Piece:
-        """Create a Piece instance from a token like 'wP' or 'bK'."""
         color = token[0]
         piece_type = token[1]
-        registry = {
-            "K": King, "Q": Queen, "R": Rook,
-            "B": Bishop, "N": Knight, "P": Pawn,
-        }
+        registry = {"K": King, "Q": Queen, "R": Rook, "B": Bishop, "N": Knight, "P": Pawn}
         return registry[piece_type](color)
 
 
@@ -56,10 +47,7 @@ class Queen(Piece):
         row_delta = end[0] - start[0]
         col_delta = end[1] - start[1]
         abs_row, abs_col = abs(row_delta), abs(col_delta)
-        return (
-            (row_delta == 0 or col_delta == 0 or abs_row == abs_col)
-            and _is_path_clear(board, start, end)
-        )
+        return (row_delta == 0 or col_delta == 0 or abs_row == abs_col) and _is_path_clear(board, start, end)
 
 
 class Rook(Piece):

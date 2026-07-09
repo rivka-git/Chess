@@ -6,14 +6,9 @@ from typing import Sequence
 
 
 class Board:
-    """Represent a board parsed from a text fixture.
-
-    The board stores rows as lists of cell tokens and exposes its dimensions so
-    it can be printed back in a canonical form.
-    """
+    """Represent a board parsed from a text fixture."""
 
     def __init__(self, rows: Sequence[Sequence[str]]) -> None:
-        """Create a board from a sequence of row token lists."""
         if not rows:
             raise ValueError("Board cannot be empty.")
 
@@ -33,5 +28,4 @@ class Board:
         self.width = width
 
     def to_canonical_string(self) -> str:
-        """Return the board in the canonical text format."""
         return "\n".join(" ".join(row) for row in self.rows)

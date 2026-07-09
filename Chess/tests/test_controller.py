@@ -1,53 +1,41 @@
-"""Tests for the controller behavior in iteration 2."""
+"""Tests for the controller behavior."""
 
 import io
 import sys
 
-from controller import Controller
-from movement import MovementRules
-import main
+from engine.game_engine import GameEngine
+from rules.rule_engine import MovementRules
+import app
 
 
 def test_click_selects_friendly_piece() -> None:
-    """A click on a piece should select it."""
-    controller = Controller([["wK", "."], [".", "bR"]])
-
-    controller.click(50, 50)
-
-    assert controller.selected_position == (0, 0)
+    engine = GameEngine([["wK", "."], [".", "bR"]])
+    engine.click(50, 50)
+    assert engine.selected_position == (0, 0)
 
 
 def test_click_on_empty_cell_requests_move() -> None:
-    """A click on an empty cell after selecting a piece should queue a move request."""
-    controller = Controller([["wK", "."], [".", "bR"]])
-
-    controller.click(50, 50)
-    controller.click(150, 50)
-
-    assert controller.selected_position is None
-    assert len(controller.pending_moves) == 1
+    engine = GameEngine([["wK", "."], [".", "bR"]])
+    engine.click(50, 50)
+    engine.click(150, 50)
+    assert engine.selected_position is None
+    assert len(engine.pending_moves) == 1
 
 
 def test_click_outside_board_is_ignored() -> None:
-    """Clicks outside the board should not change the controller state."""
-    controller = Controller([["wK", "."], [".", "bR"]])
-
-    controller.click(1000, 1000)
-
-    assert controller.selected_position is None
-    assert controller.pending_moves == []
+    engine = GameEngine([["wK", "."], [".", "bR"]])
+    engine.click(1000, 1000)
+    assert engine.selected_position is None
+    assert engine.pending_moves == []
 
 
 def test_controller_accepts_injected_movement_rules() -> None:
-    """The controller should be able to use movement rules provided by the caller."""
     movement_rules = MovementRules()
-    controller = Controller([["wK", "."], [".", "bR"]], movement_rules=movement_rules)
-
-    assert controller.movement_rules is movement_rules
+    engine = GameEngine([["wK", "."], [".", "bR"]], movement_rules=movement_rules)
+    assert engine.movement_rules is movement_rules
 
 
 def test_main_function_processes_board_input(monkeypatch: object, capsys: object) -> None:
-    """The main entry point should process board input and print the board output."""
     board_input = """Board:
 wR wP .
 Commands:
@@ -56,9 +44,7 @@ click 250 50
 wait 1000
 print board
 """
-
     monkeypatch.setattr(sys, "stdin", io.StringIO(board_input))
-    main.main()
-
+    app.main()
     captured = capsys.readouterr()
     assert captured.out.strip() == "wR wP ."
