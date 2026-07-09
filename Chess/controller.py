@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from board import Board
 from movement import MovementRules, MoveExecutor
-
-TRANSIT_DURATION_MS = 1000
+from game_timer import GameTimer
 
 
 class Controller:
@@ -20,8 +19,7 @@ class Controller:
         """Create a controller around a board representation."""
         self.board = Board(rows or [["."]])
         self.selected_position: tuple[int, int] | None = None
-        self.pending_moves: list[tuple[tuple[int, int], tuple[int, int]]] = []  # (start, end, arrival_time)
-        self.airborne: list[tuple[tuple[int, int], int]] = []  # (position, land_time)
+        self.game_timer = GameTimer()
         self.time_ms = 0
         self.game_over = False
         self.movement_rules = movement_rules or MovementRules()
@@ -52,9 +50,8 @@ class Controller:
 
         if self.movement_rules.is_legal_move(self.board, self.selected_position, target_position):
             # board is locked while any piece is in transit
-            if not self.pending_moves:
-                arrival_time = self.time_ms + TRANSIT_DURATION_MS
-                self.pending_moves.append((self.selected_position, target_position, arrival_time))
+            if not self.game_timer.has_pending_moves():
+                self.game_timer.add_move(self.selected_position, target_position)
         self.selected_position = None
 
     def jump(self, x: int, y: int) -> None:
@@ -69,15 +66,16 @@ class Controller:
         position = (row, col)
         if self.board.rows[row][col] == ".":
             return
-        if self._is_piece_in_transit(position):
+        if self.game_timer.is_piece_in_transit(position):
             return
-        if any(pos == position for pos, land_time in self.airborne):
+        if any(pos == position for pos, land_time in self.game_timer.airborne):
             return
-        self.airborne.append((position, self.time_ms + TRANSIT_DURATION_MS))
+        self.game_timer.add_airborne(position)
 
     def wait(self, milliseconds: int) -> None:
         """Advance the game clock by the provided number of milliseconds."""
-        self.time_ms += milliseconds
+        self.game_timer.update(milliseconds)
+        self.time_ms = self.game_timer.time_ms
         self._apply_arrived_moves()
 
     def _promote_pawns(self) -> None:
@@ -88,37 +86,38 @@ class Controller:
             if self.board.rows[self.board.height - 1][col] == "bP":
                 self.board.rows[self.board.height - 1][col] = "bQ"
 
-    def _is_piece_in_transit(self, position: tuple[int, int]) -> bool:
-        """Return whether a piece at the given position is already moving."""
-        return any(start == position for start, end, arrival_time in self.pending_moves)
-
     def _apply_arrived_moves(self) -> None:
         """Apply all pending moves whose arrival time has been reached."""
-        remaining = []
-        for move in self.pending_moves:
-            start, end, arrival_time = move
-            if self.time_ms >= arrival_time:
-                # <= so a piece arriving exactly at land_time is still captured
-                airborne_positions = [pos for pos, land_time in self.airborne if self.time_ms <= land_time]
-                if end in airborne_positions:
-                    # attacker is destroyed mid-air; jumper stays in place
-                    self.board.rows[start[0]][start[1]] = "."
-                else:
-                    king_present_before = self._kings_on_board()
-                    self.move_executor.apply_move(self.board, start, end)
-                    self._promote_pawns()
-                    if self._a_king_was_captured(king_present_before):
-                        self.game_over = True
+        arrived_moves = self.game_timer.get_arrived_moves()
+        airborne_positions = self.game_timer.get_airborne_positions()
+        
+        for start, end, arrival_time in arrived_moves:
+            if end in airborne_positions:
+                # attacker is destroyed mid-air; jumper stays in place
+                self.board.rows[start[0]][start[1]] = "."
             else:
-                remaining.append(move)
-        self.pending_moves = remaining
-        # strict < so the jump window expires after land_time is passed
-        self.airborne = [(pos, land_time) for pos, land_time in self.airborne if self.time_ms < land_time]
+                king_present_before = self._kings_on_board()
+                self.move_executor.apply_move(self.board, start, end)
+                self._promote_pawns()
+                if self._a_king_was_captured(king_present_before):
+                    self.game_over = True
+        
+        self.game_timer.expire_airborne()
 
     def print_board(self) -> str:
         """Return the current settled board state after completed moves."""
         self._apply_arrived_moves()
         return self.board.to_canonical_string()
+
+    @property
+    def pending_moves(self) -> list[tuple[tuple[int, int], tuple[int, int], int]]:
+        """Return pending moves from the game timer."""
+        return self.game_timer.pending_moves
+
+    @property
+    def airborne(self) -> list[tuple[tuple[int, int], int]]:
+        """Return airborne pieces from the game timer."""
+        return self.game_timer.airborne
 
     def _kings_on_board(self) -> set[str]:
         """Return the set of king tokens currently present on the board."""
