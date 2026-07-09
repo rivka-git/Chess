@@ -44,6 +44,7 @@ class GameEngine:
         self.game_over = False
 
     def click(self, x: int, y: int) -> None:
+        # Ensures board is up to date before processing input (relevant for real-time play)
         self._apply_arrived_moves()
         if self.game_over:
             return
@@ -53,6 +54,7 @@ class GameEngine:
         self.game_timer.add_move(start, end)
 
     def jump(self, x: int, y: int) -> None:
+        # Ensures board is up to date before processing input (relevant for real-time play)
         self._apply_arrived_moves()
         if self.game_over:
             return
