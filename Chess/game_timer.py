@@ -15,8 +15,9 @@ class GameTimer:
         self.airborne: list[tuple[tuple[int, int], int]] = []  # (position, land_time)
 
     def add_move(self, start: tuple[int, int], end: tuple[int, int]) -> None:
-        """Add a new move to the pending list with arrival time."""
-        arrival_time = self.time_ms + TRANSIT_DURATION_MS
+        """Add a new move to the pending list with arrival time based on distance."""
+        distance = max(abs(end[0] - start[0]), abs(end[1] - start[1]))
+        arrival_time = self.time_ms + TRANSIT_DURATION_MS * distance
         self.pending_moves.append((start, end, arrival_time))
 
     def add_airborne(self, position: tuple[int, int]) -> None:
