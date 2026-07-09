@@ -6,6 +6,7 @@ from board import Board
 from movement import MovementRules, MoveExecutor
 from game_timer import GameTimer
 from collision_resolver import CollisionResolver
+from pawn_promoter import PawnPromoter
 
 
 class Controller:
@@ -22,6 +23,7 @@ class Controller:
         self.selected_position: tuple[int, int] | None = None
         self.game_timer = GameTimer()
         self.collision_resolver = CollisionResolver()
+        self.pawn_promoter = PawnPromoter()
         self.time_ms = 0
         self.game_over = False
         self.movement_rules = movement_rules or MovementRules()
@@ -80,14 +82,6 @@ class Controller:
         self.time_ms = self.game_timer.time_ms
         self._apply_arrived_moves()
 
-    def _promote_pawns(self) -> None:
-        """Promote any pawn that has reached the last row to a queen."""
-        for col in range(self.board.width):
-            if self.board.rows[0][col] == "wP":
-                self.board.rows[0][col] = "wQ"
-            if self.board.rows[self.board.height - 1][col] == "bP":
-                self.board.rows[self.board.height - 1][col] = "bQ"
-
     def _apply_arrived_moves(self) -> None:
         """Apply all pending moves whose arrival time has been reached."""
         arrived_moves = self.game_timer.get_arrived_moves()
@@ -104,7 +98,7 @@ class Controller:
         for start, end in moves_to_execute:
             king_present_before = self._kings_on_board()
             self.move_executor.apply_move(self.board, start, end)
-            self._promote_pawns()
+            self.pawn_promoter.promote_pawns(self.board)
             if self._a_king_was_captured(king_present_before):
                 self.game_over = True
         
