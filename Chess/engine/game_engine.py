@@ -6,7 +6,7 @@ from model.board import Board
 from rules.rule_engine import MovementRules, MoveExecutor, PawnPromoter
 from realtime.motion import GameTimer
 from realtime.real_time_arbiter import CollisionResolver
-from input.controller import InputHandler
+from input.input_handler import InputHandler
 
 
 class GameEndDetector:
