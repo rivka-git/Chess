@@ -30,7 +30,7 @@ def _parse_row(line: str, registry: PieceRegistry) -> list[str]:
     """Parse and validate a single board row, returning a list of tokens."""
     tokens = []
     for part in line.split():
-        if part != "." and (len(part) != 2 or part[1] not in registry.rules):
+        if part != "." and (len(part) != 2 or part[0] not in {"w", "b"} or part[1] not in registry.rules):
             raise ValueError("UNKNOWN_TOKEN")
         tokens.append(part)
     return tokens
