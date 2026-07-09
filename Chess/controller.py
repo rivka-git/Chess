@@ -7,6 +7,7 @@ from movement import MovementRules, MoveExecutor
 from game_timer import GameTimer
 from collision_resolver import CollisionResolver
 from pawn_promoter import PawnPromoter
+from game_end_detector import GameEndDetector
 
 
 class Controller:
@@ -24,6 +25,7 @@ class Controller:
         self.game_timer = GameTimer()
         self.collision_resolver = CollisionResolver()
         self.pawn_promoter = PawnPromoter()
+        self.game_end_detector = GameEndDetector()
         self.time_ms = 0
         self.game_over = False
         self.movement_rules = movement_rules or MovementRules()
@@ -96,10 +98,10 @@ class Controller:
         
         # Execute moves that didn't collide
         for start, end in moves_to_execute:
-            king_present_before = self._kings_on_board()
+            kings_before = self.game_end_detector._get_kings_on_board(self.board)
             self.move_executor.apply_move(self.board, start, end)
             self.pawn_promoter.promote_pawns(self.board)
-            if self._a_king_was_captured(king_present_before):
+            if self.game_end_detector.check_king_captured(self.board, kings_before):
                 self.game_over = True
         
         self.game_timer.expire_airborne()
@@ -118,15 +120,6 @@ class Controller:
     def airborne(self) -> list[tuple[tuple[int, int], int]]:
         """Return airborne pieces from the game timer."""
         return self.game_timer.airborne
-
-    def _kings_on_board(self) -> set[str]:
-        """Return the set of king tokens currently present on the board."""
-        pieces = {cell for row in self.board.rows for cell in row}
-        return pieces & {"wK", "bK"}
-
-    def _a_king_was_captured(self, kings_before: set[str]) -> bool:
-        """Return whether a king that was present before a move is now gone."""
-        return bool(kings_before - self._kings_on_board())
 
     def _is_own_piece(self, start: tuple[int, int], end: tuple[int, int]) -> bool:
         """Return whether the destination contains a piece of the same color."""
