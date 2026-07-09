@@ -1,0 +1,9 @@
+Board:
+wR . bR
+Commands:
+click 250 50
+click 50 50
+wait 1000
+jump 50 50
+wait 1000
+print board

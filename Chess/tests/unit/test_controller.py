@@ -29,6 +29,15 @@ def test_click_outside_board_is_ignored() -> None:
     assert engine.pending_moves == []
 
 
+def test_jump_ignored_after_game_over():
+    engine = GameEngine([["wR", "bK", "."]])
+    engine.click(50, 50)
+    engine.click(150, 50)
+    engine.wait(1000)
+    engine.jump(250, 50)
+    assert engine.airborne == []
+
+
 def test_controller_accepts_injected_movement_rules() -> None:
     movement_rules = MovementRules()
     engine = GameEngine([["wK", "."], [".", "bR"]], movement_rules=movement_rules)
@@ -48,3 +57,32 @@ print board
     app.main()
     captured = capsys.readouterr()
     assert captured.out.strip() == "wR wP ."
+
+
+def test_main_jump_command(monkeypatch, capsys):
+    board_input = """Board:
+wR . .
+Commands:
+jump 50 50
+wait 1000
+print board
+"""
+    monkeypatch.setattr(sys, "stdin", io.StringIO(board_input))
+    app.main()
+    captured = capsys.readouterr()
+    assert captured.out.strip() == "wR . ."
+
+
+def test_main_invalid_board_prints_error(monkeypatch, capsys):
+    monkeypatch.setattr(sys, "stdin", io.StringIO(""))
+    app.main()
+    captured = capsys.readouterr()
+    assert captured.out.startswith("ERROR")
+
+
+def test_main_empty_command_ignored(monkeypatch, capsys):
+    board_input = "Board:\nwK .\nCommands:\n\nprint board\n"
+    monkeypatch.setattr(sys, "stdin", io.StringIO(board_input))
+    app.main()
+    captured = capsys.readouterr()
+    assert "wK" in captured.out

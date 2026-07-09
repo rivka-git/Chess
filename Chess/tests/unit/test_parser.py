@@ -23,3 +23,29 @@ def test_parse_board_rejects_unknown_token() -> None:
 def test_parse_board_rejects_row_width_mismatch() -> None:
     with pytest.raises(ValueError, match="ROW_WIDTH_MISMATCH"):
         parse_board("Board:\nwK . .\n. bK\nCommands:")
+
+
+def test_parse_board_no_board_section():
+    import pytest
+    with pytest.raises(ValueError):
+        parse_board("Commands:\nprint board")
+
+
+def test_parse_board_empty_string():
+    with pytest.raises(ValueError):
+        parse_board("")
+
+
+def test_parse_commands_empty_string():
+    from ioutils.board_parser import parse_commands
+    assert parse_commands("") == []
+
+
+def test_parse_commands_no_commands_section():
+    from ioutils.board_parser import parse_commands
+    assert parse_commands("Board:\nwK .\n") == []
+
+
+def test_parse_board_skips_empty_lines_in_board_section():
+    board = parse_board("Board:\n\nwK .\nCommands:")
+    assert board.rows == [["wK", "."]]
