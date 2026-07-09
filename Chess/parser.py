@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from board import Board
-from piece_registry import PieceRegistry
-from movement import MovementRules
+from movement import PieceRegistry, MovementRules
 
 
 def _extract_board_lines(board_string: str) -> list[str]:
