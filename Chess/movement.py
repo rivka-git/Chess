@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from board import Board
+from piece_registry import PieceRegistry
 
 
 class MoveExecutor:
@@ -20,19 +21,18 @@ class MoveExecutor:
 class MovementRules:
     """Encapsulate movement validation for chess pieces."""
 
-    def __init__(self) -> None:
-        self._piece_rules: dict[str, MoveChecker] = {
-            "K": MovementRules._king_move,
-            "R": MovementRules._rook_move,
-            "B": MovementRules._bishop_move,
-            "Q": MovementRules._queen_move,
-            "N": MovementRules._knight_move,
-            "P": MovementRules._pawn_move,
-        }
+    def __init__(self, registry: PieceRegistry | None = None) -> None:
+        self._registry = registry or self._build_default_registry()
 
-    def register(self, piece_type: str, checker: object) -> None:
-        """Register a custom movement rule for a piece type."""
-        self._piece_rules[piece_type] = checker
+    def _build_default_registry(self) -> PieceRegistry:
+        registry = PieceRegistry()
+        registry.register("K", MovementRules._king_move)
+        registry.register("R", MovementRules._rook_move)
+        registry.register("B", MovementRules._bishop_move)
+        registry.register("Q", MovementRules._queen_move)
+        registry.register("N", MovementRules._knight_move)
+        registry.register("P", MovementRules._pawn_move)
+        return registry
 
     def is_legal_move(self, board: Board, start: tuple[int, int], end: tuple[int, int]) -> bool:
         """Return whether the requested move is legal according to the current rules."""
@@ -53,7 +53,7 @@ class MovementRules:
         abs_row = abs(row_delta)
         abs_col = abs(col_delta)
 
-        checker = self._piece_rules.get(piece_type)
+        checker = self._registry.rules.get(piece_type)
         if checker is None:
             return False
         return checker(self, board, start, end, row_delta, col_delta, abs_row, abs_col)

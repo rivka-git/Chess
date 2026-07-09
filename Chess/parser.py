@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from board import Board
-
-VALID_TOKENS = {".", "wK", "bK", "wQ", "bQ", "wR", "bR", "wB", "bB", "wN", "bN", "wP", "bP"}
+from piece_registry import PieceRegistry
+from movement import MovementRules
 
 
 def _extract_board_lines(board_string: str) -> list[str]:
@@ -27,17 +27,17 @@ def _extract_board_lines(board_string: str) -> list[str]:
     return board_lines
 
 
-def _parse_row(line: str) -> list[str]:
+def _parse_row(line: str, registry: PieceRegistry) -> list[str]:
     """Parse and validate a single board row, returning a list of tokens."""
     tokens = []
     for part in line.split():
-        if part not in VALID_TOKENS:
+        if part != "." and (len(part) != 2 or part[1] not in registry.rules):
             raise ValueError("UNKNOWN_TOKEN")
         tokens.append(part)
     return tokens
 
 
-def parse_board(board_string: str) -> Board:
+def parse_board(board_string: str, registry: PieceRegistry | None = None) -> Board:
     """Parse a text board fixture into a Board instance."""
     if not board_string or not board_string.strip():
         raise ValueError("Board input cannot be empty.")
@@ -47,7 +47,8 @@ def parse_board(board_string: str) -> Board:
     if not board_lines:
         raise ValueError("Board input cannot be empty.")
 
-    board_rows = [_parse_row(line) for line in board_lines if line.split()]
+    reg = registry or MovementRules()._build_default_registry()
+    board_rows = [_parse_row(line, reg) for line in board_lines if line.split()]
 
     return Board(board_rows)
 
