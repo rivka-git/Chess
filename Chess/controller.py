@@ -78,7 +78,7 @@ class Controller:
         for start, end in moves_to_execute:
             kings_before = self.game_end_detector._get_kings_on_board(self.board)
             self.move_executor.apply_move(self.board, start, end)
-            self.pawn_promoter.promote_pawns(self.board)
+            self.pawn_promoter.promote_pawns(self.board, start, end)
             if self.game_end_detector.check_king_captured(self.board, kings_before):
                 self.game_over = True
         
@@ -86,7 +86,6 @@ class Controller:
 
     def print_board(self) -> str:
         """Return the current settled board state after completed moves."""
-        self._apply_arrived_moves()
         return self.board.to_canonical_string()
 
     @property

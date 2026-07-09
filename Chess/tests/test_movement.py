@@ -108,15 +108,16 @@ def test_pawn_captures_diagonally() -> None:
 
 
 def test_pawn_cannot_move_two_steps() -> None:
-    controller = Controller([[".", "."], [".", "."], ["wP", "."], [".", "."]])
+    # wP not on start rank (height-1=3), double step is illegal
+    controller = Controller([[".", "."], [".", "."], [".", "."], ["wP", "."], [".", "."]])
 
-    controller.click(50, 250)
-    controller.click(50, 50)
+    controller.click(50, 350)
+    controller.click(50, 150)
     controller.wait(1000)
     controller.print_board()
 
-    assert controller.board.rows[2][0] == "wP"
-    assert controller.board.rows[0][0] == "."
+    assert controller.board.rows[3][0] == "wP"
+    assert controller.board.rows[1][0] == "."
 
 
 def test_pawn_cannot_capture_forward() -> None:
@@ -132,6 +133,7 @@ def test_pawn_cannot_capture_forward() -> None:
 
 
 def test_pawn_double_step_from_start() -> None:
+    # wP on start rank (height-1=3), double step is legal
     controller = Controller([[".", "."], [".", "."], [".", "."], ["wP", "."]])
 
     controller.click(50, 350)
@@ -154,6 +156,7 @@ def test_pawn_double_step_blocked() -> None:
 
 
 def test_white_pawn_promotes_to_queen() -> None:
+    # wP on last row (height-1=1), single step to row 0 -> promotes
     controller = Controller([[".", "."], ["wP", "."]])
 
     controller.click(50, 150)
@@ -165,6 +168,7 @@ def test_white_pawn_promotes_to_queen() -> None:
 
 
 def test_black_pawn_promotes_to_queen() -> None:
+    # bP on row 0 (last row for black = 0), single step to last row -> promotes
     controller = Controller([["bP", "."], [".", "."]])
 
     controller.click(50, 50)
