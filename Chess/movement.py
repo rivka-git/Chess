@@ -1,12 +1,24 @@
-"""Movement rules and board update logic for chess pieces."""
+"""Movement rules and move execution logic for chess pieces."""
 
 from __future__ import annotations
 
 from board import Board
 
 
+class MoveExecutor:
+    """Execute a validated move on the board."""
+
+    def apply_move(self, board: Board, start: tuple[int, int], end: tuple[int, int]) -> None:
+        """Move a piece from start to end, replacing any captured piece."""
+        start_row, start_col = start
+        end_row, end_col = end
+        piece = board.rows[start_row][start_col]
+        board.rows[start_row][start_col] = "."
+        board.rows[end_row][end_col] = piece
+
+
 class MovementRules:
-    """Encapsulate movement validation and application for the current board."""
+    """Encapsulate movement validation for chess pieces."""
 
     def __init__(self) -> None:
         self._piece_rules: dict[str, MoveChecker] = {
@@ -82,14 +94,6 @@ class MovementRules:
         if abs_col == 1 and row_delta == direction:
             return target != "." and self._get_piece_color(target) != color
         return False
-
-    def apply_move(self, board: Board, start: tuple[int, int], end: tuple[int, int]) -> None:
-        """Move a piece from start to end, replacing any captured piece."""
-        start_row, start_col = start
-        end_row, end_col = end
-        piece = board.rows[start_row][start_col]
-        board.rows[start_row][start_col] = "."
-        board.rows[end_row][end_col] = piece
 
     def _is_path_clear(self, board: Board, start: tuple[int, int], end: tuple[int, int]) -> bool:
         """Return whether every intermediate square is empty for a sliding move."""

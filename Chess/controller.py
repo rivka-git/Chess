@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from board import Board
-from movement import MovementRules
+from movement import MovementRules, MoveExecutor
+
+TRANSIT_DURATION_MS = 1000
 
 
 class Controller:
@@ -13,15 +15,17 @@ class Controller:
         self,
         rows: list[list[str]] | None = None,
         movement_rules: MovementRules | None = None,
+        move_executor: MoveExecutor | None = None,
     ) -> None:
         """Create a controller around a board representation."""
         self.board = Board(rows or [["."]])
         self.selected_position: tuple[int, int] | None = None
-        self.pending_moves: list[tuple[tuple[int, int], tuple[int, int]]] = []
-        self.airborne: list[tuple[tuple[int, int], int]] = []
+        self.pending_moves: list[tuple[tuple[int, int], tuple[int, int]]] = []  # (start, end, arrival_time)
+        self.airborne: list[tuple[tuple[int, int], int]] = []  # (position, land_time)
         self.time_ms = 0
         self.game_over = False
         self.movement_rules = movement_rules or MovementRules()
+        self.move_executor = move_executor or MoveExecutor()
 
     def click(self, x: int, y: int) -> None:
         """Handle a click at pixel coordinates, converting to a board cell."""
@@ -47,8 +51,9 @@ class Controller:
             return
 
         if self.movement_rules.is_legal_move(self.board, self.selected_position, target_position):
+            # board is locked while any piece is in transit
             if not self.pending_moves:
-                arrival_time = self.time_ms + 1000
+                arrival_time = self.time_ms + TRANSIT_DURATION_MS
                 self.pending_moves.append((self.selected_position, target_position, arrival_time))
         self.selected_position = None
 
@@ -68,7 +73,7 @@ class Controller:
             return
         if any(pos == position for pos, land_time in self.airborne):
             return
-        self.airborne.append((position, self.time_ms + 1000))
+        self.airborne.append((position, self.time_ms + TRANSIT_DURATION_MS))
 
     def wait(self, milliseconds: int) -> None:
         """Advance the game clock by the provided number of milliseconds."""
@@ -93,41 +98,42 @@ class Controller:
         for move in self.pending_moves:
             start, end, arrival_time = move
             if self.time_ms >= arrival_time:
+                # <= so a piece arriving exactly at land_time is still captured
                 airborne_positions = [pos for pos, land_time in self.airborne if self.time_ms <= land_time]
                 if end in airborne_positions:
+                    # attacker is destroyed mid-air; jumper stays in place
                     self.board.rows[start[0]][start[1]] = "."
                 else:
-                    pieces_before = [cell for row in self.board.rows for cell in row]
-                    self.movement_rules.apply_move(self.board, start, end)
+                    king_present_before = self._kings_on_board()
+                    self.move_executor.apply_move(self.board, start, end)
                     self._promote_pawns()
-                    pieces_after = [cell for row in self.board.rows for cell in row]
-                    if ("wK" in pieces_before and "wK" not in pieces_after) or \
-                       ("bK" in pieces_before and "bK" not in pieces_after):
+                    if self._a_king_was_captured(king_present_before):
                         self.game_over = True
             else:
                 remaining.append(move)
         self.pending_moves = remaining
+        # strict < so the jump window expires after land_time is passed
         self.airborne = [(pos, land_time) for pos, land_time in self.airborne if self.time_ms < land_time]
-
-    def _is_king_captured(self) -> bool:
-        """Return whether a king that was on the board has been captured."""
-        pieces = [cell for row in self.board.rows for cell in row]
-        return "bK" not in pieces or "wK" not in pieces
 
     def print_board(self) -> str:
         """Return the current settled board state after completed moves."""
         self._apply_arrived_moves()
         return self.board.to_canonical_string()
 
+    def _kings_on_board(self) -> set[str]:
+        """Return the set of king tokens currently present on the board."""
+        pieces = {cell for row in self.board.rows for cell in row}
+        return pieces & {"wK", "bK"}
+
+    def _a_king_was_captured(self, kings_before: set[str]) -> bool:
+        """Return whether a king that was present before a move is now gone."""
+        return bool(kings_before - self._kings_on_board())
+
     def _is_own_piece(self, start: tuple[int, int], end: tuple[int, int]) -> bool:
         """Return whether the destination contains a piece of the same color."""
         start_piece = self.board.rows[start[0]][start[1]]
         end_piece = self.board.rows[end[0]][end[1]]
-        return (
-            end_piece != "."
-            and self.movement_rules._get_piece_color(start_piece) is not None
-            and self.movement_rules._get_piece_color(start_piece) == self.movement_rules._get_piece_color(end_piece)
-        )
+        return end_piece != "." and self.movement_rules.is_same_color(start_piece, end_piece)
 
     def _is_inside_board(self, row: int, col: int) -> bool:
         """Return whether the coordinates fall within the board bounds."""
