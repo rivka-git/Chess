@@ -8,6 +8,7 @@ from game_timer import GameTimer
 from collision_resolver import CollisionResolver
 from pawn_promoter import PawnPromoter
 from game_end_detector import GameEndDetector
+from input_handler import InputHandler
 
 
 class Controller:
@@ -21,61 +22,38 @@ class Controller:
     ) -> None:
         """Create a controller around a board representation."""
         self.board = Board(rows or [["."]])
-        self.selected_position: tuple[int, int] | None = None
+        self.movement_rules = movement_rules or MovementRules()
+        self.move_executor = move_executor or MoveExecutor()
+        
         self.game_timer = GameTimer()
         self.collision_resolver = CollisionResolver()
         self.pawn_promoter = PawnPromoter()
         self.game_end_detector = GameEndDetector()
+        self.input_handler = InputHandler(self.game_timer, self.movement_rules)
+        
         self.time_ms = 0
         self.game_over = False
-        self.movement_rules = movement_rules or MovementRules()
-        self.move_executor = move_executor or MoveExecutor()
 
     def click(self, x: int, y: int) -> None:
         """Handle a click at pixel coordinates, converting to a board cell."""
         self._apply_arrived_moves()
         if self.game_over:
             return
-        row = y // 100
-        col = x // 100
+        self.input_handler.handle_click(self.board, x, y, self._on_move_requested)
 
-        if not self._is_inside_board(row, col):
-            return
-
-        if self.selected_position is None:
-            if self.board.rows[row][col] != ".":
-                self.selected_position = (row, col)
-            return
-
-        target_position = (row, col)
-        target_piece = self.board.rows[row][col]
-
-        if target_piece != "." and self._is_own_piece(self.selected_position, target_position):
-            self.selected_position = target_position
-            return
-
-        if self.movement_rules.is_legal_move(self.board, self.selected_position, target_position):
-            # board is locked while any piece is in transit
-            if not self.game_timer.has_pending_moves():
-                self.game_timer.add_move(self.selected_position, target_position)
-        self.selected_position = None
+    def _on_move_requested(self, start: tuple[int, int], end: tuple[int, int]) -> None:
+        """Called when the input handler wants to queue a move."""
+        self.game_timer.add_move(start, end)
 
     def jump(self, x: int, y: int) -> None:
         """Make a piece jump, staying airborne for 1000ms to capture arriving enemies."""
         self._apply_arrived_moves()
         if self.game_over:
             return
-        row = y // 100
-        col = x // 100
-        if not self._is_inside_board(row, col):
-            return
-        position = (row, col)
-        if self.board.rows[row][col] == ".":
-            return
-        if self.game_timer.is_piece_in_transit(position):
-            return
-        if any(pos == position for pos, land_time in self.game_timer.airborne):
-            return
+        self.input_handler.handle_jump(self.board, x, y, self._on_jump_requested)
+
+    def _on_jump_requested(self, position: tuple[int, int]) -> None:
+        """Called when the input handler wants to queue a jump."""
         self.game_timer.add_airborne(position)
 
     def wait(self, milliseconds: int) -> None:
@@ -121,12 +99,12 @@ class Controller:
         """Return airborne pieces from the game timer."""
         return self.game_timer.airborne
 
-    def _is_own_piece(self, start: tuple[int, int], end: tuple[int, int]) -> bool:
-        """Return whether the destination contains a piece of the same color."""
-        start_piece = self.board.rows[start[0]][start[1]]
-        end_piece = self.board.rows[end[0]][end[1]]
-        return end_piece != "." and self.movement_rules.is_same_color(start_piece, end_piece)
+    @property
+    def selected_position(self) -> tuple[int, int] | None:
+        """Return the currently selected position from input handler."""
+        return self.input_handler.selected_position
 
-    def _is_inside_board(self, row: int, col: int) -> bool:
-        """Return whether the coordinates fall within the board bounds."""
-        return 0 <= row < self.board.height and 0 <= col < self.board.width
+    @selected_position.setter
+    def selected_position(self, value: tuple[int, int] | None) -> None:
+        """Set the currently selected position in input handler."""
+        self.input_handler.selected_position = value
