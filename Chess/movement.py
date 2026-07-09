@@ -46,35 +46,31 @@ class MovementRules:
             return False
         return checker(self, board, start, end, row_delta, col_delta, abs_row, abs_col)
 
-    @staticmethod
-    def _king_move(self: "MovementRules", board: Board, start: tuple[int, int], end: tuple[int, int], row_delta: int, col_delta: int, abs_row: int, abs_col: int) -> bool:
+    def _king_move(self, board: Board, start: tuple[int, int], end: tuple[int, int], row_delta: int, col_delta: int, abs_row: int, abs_col: int) -> bool:
         return (abs_row, abs_col) in {(0, 1), (1, 0), (1, 1)}
 
-    @staticmethod
-    def _rook_move(self: "MovementRules", board: Board, start: tuple[int, int], end: tuple[int, int], row_delta: int, col_delta: int, abs_row: int, abs_col: int) -> bool:
+    def _rook_move(self, board: Board, start: tuple[int, int], end: tuple[int, int], row_delta: int, col_delta: int, abs_row: int, abs_col: int) -> bool:
         return (row_delta == 0 or col_delta == 0) and self._is_path_clear(board, start, end)
 
-    @staticmethod
-    def _bishop_move(self: "MovementRules", board: Board, start: tuple[int, int], end: tuple[int, int], row_delta: int, col_delta: int, abs_row: int, abs_col: int) -> bool:
+    def _bishop_move(self, board: Board, start: tuple[int, int], end: tuple[int, int], row_delta: int, col_delta: int, abs_row: int, abs_col: int) -> bool:
         return abs_row == abs_col and self._is_path_clear(board, start, end)
 
-    @staticmethod
-    def _queen_move(self: "MovementRules", board: Board, start: tuple[int, int], end: tuple[int, int], row_delta: int, col_delta: int, abs_row: int, abs_col: int) -> bool:
+    def _queen_move(self, board: Board, start: tuple[int, int], end: tuple[int, int], row_delta: int, col_delta: int, abs_row: int, abs_col: int) -> bool:
         return (
             (row_delta == 0 or col_delta == 0 or abs_row == abs_col)
             and self._is_path_clear(board, start, end)
         )
 
-    @staticmethod
-    def _knight_move(self: "MovementRules", board: Board, start: tuple[int, int], end: tuple[int, int], row_delta: int, col_delta: int, abs_row: int, abs_col: int) -> bool:
+    def _knight_move(self, board: Board, start: tuple[int, int], end: tuple[int, int], row_delta: int, col_delta: int, abs_row: int, abs_col: int) -> bool:
         return {abs_row, abs_col} == {1, 2}
 
-    @staticmethod
-    def _pawn_move(self: "MovementRules", board: Board, start: tuple[int, int], end: tuple[int, int], row_delta: int, col_delta: int, abs_row: int, abs_col: int) -> bool:
+    def _pawn_move(self, board: Board, start: tuple[int, int], end: tuple[int, int], row_delta: int, col_delta: int, abs_row: int, abs_col: int) -> bool:
         start_row, start_col = start
         end_row, end_col = end
         color = self._get_piece_color(board.rows[start_row][start_col])
+        # negative direction means white moves up (decreasing row index)
         direction = -1 if color == "w" else 1
+        # white starts at the bottom row, black at the top
         start_rank = board.height - 1 if color == "w" else 0
         target = board.rows[end_row][end_col]
 
@@ -130,7 +126,13 @@ class MovementRules:
 
     def _get_piece_type(self, piece: str) -> str:
         """Return the chess piece type for a board token."""
+        # tokens are either 'wK'/'bR'/... (2 chars) or bare single chars
         return piece[1] if len(piece) > 1 else piece
+
+    def is_same_color(self, piece_a: str, piece_b: str) -> bool:
+        """Return whether two pieces share the same color."""
+        color_a = self._get_piece_color(piece_a)
+        return color_a is not None and color_a == self._get_piece_color(piece_b)
 
     def _get_piece_color(self, piece: str) -> str | None:
         """Return the color of the represented piece, if any."""
