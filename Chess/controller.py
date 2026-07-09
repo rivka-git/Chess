@@ -5,6 +5,7 @@ from __future__ import annotations
 from board import Board
 from movement import MovementRules, MoveExecutor
 from game_timer import GameTimer
+from collision_resolver import CollisionResolver
 
 
 class Controller:
@@ -20,6 +21,7 @@ class Controller:
         self.board = Board(rows or [["."]])
         self.selected_position: tuple[int, int] | None = None
         self.game_timer = GameTimer()
+        self.collision_resolver = CollisionResolver()
         self.time_ms = 0
         self.game_over = False
         self.movement_rules = movement_rules or MovementRules()
@@ -91,16 +93,20 @@ class Controller:
         arrived_moves = self.game_timer.get_arrived_moves()
         airborne_positions = self.game_timer.get_airborne_positions()
         
-        for start, end, arrival_time in arrived_moves:
-            if end in airborne_positions:
-                # attacker is destroyed mid-air; jumper stays in place
-                self.board.rows[start[0]][start[1]] = "."
-            else:
-                king_present_before = self._kings_on_board()
-                self.move_executor.apply_move(self.board, start, end)
-                self._promote_pawns()
-                if self._a_king_was_captured(king_present_before):
-                    self.game_over = True
+        moves_to_execute, pieces_destroyed = self.collision_resolver.resolve_collisions(
+            self.board, arrived_moves, airborne_positions
+        )
+        
+        # Destroy pieces that collided with jumpers
+        self.collision_resolver.destroy_pieces(self.board, pieces_destroyed)
+        
+        # Execute moves that didn't collide
+        for start, end in moves_to_execute:
+            king_present_before = self._kings_on_board()
+            self.move_executor.apply_move(self.board, start, end)
+            self._promote_pawns()
+            if self._a_king_was_captured(king_present_before):
+                self.game_over = True
         
         self.game_timer.expire_airborne()
 
