@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from model.board import Board
-from rules.piece_rules import Piece, King, Queen, Rook, Bishop, Knight, Pawn
+from model.piece import Piece, King, Queen, Rook, Bishop, Knight, Pawn
 
 
 class PieceRegistry:

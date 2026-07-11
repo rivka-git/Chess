@@ -2,7 +2,7 @@
 
 import pytest
 from model.board import Board
-from rules.piece_rules import King, Queen, Rook, Bishop, Knight, Pawn, Piece
+from model.piece import King, Queen, Rook, Bishop, Knight, Pawn, Piece
 
 
 def make_board(rows):
@@ -163,6 +163,6 @@ def test_queen_blocked_going_up():
 
 
 def test_is_path_clear_non_straight_non_diagonal_returns_false():
-    from rules.piece_rules import _is_path_clear
+    from model.piece import _is_path_clear
     board = make_board([[".", ".", "."], [".", ".", "."], [".", ".", "."]])
     assert not _is_path_clear(board, (0, 0), (1, 2))
