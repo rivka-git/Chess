@@ -13,12 +13,8 @@ class GameEndDetector:
     """Detect when the game has ended."""
 
     def is_game_over(self, board: Board) -> bool:
-        kings = self._get_kings_on_board(board)
-        return len(kings) < 2
-
-    def _get_kings_on_board(self, board: Board) -> set[str]:
         pieces = {cell for row in board.rows for cell in row}
-        return pieces & {"wK", "bK"}
+        return len(pieces & {"wK", "bK"}) < 2
 
 
 class GameEngine:
