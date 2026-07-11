@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import sys
 
-from engine.game_engine import GameEngine
+from engine.game_engine import GameEngine, GameEndDetector
 from ioutils.board_parser import parse_board, parse_commands
+from rules.rule_engine import MovementRules, MoveExecutor, PawnPromoter
+from realtime.motion import GameTimer
+from realtime.real_time_arbiter import CollisionResolver
 
 
 def main() -> None:
@@ -13,7 +16,16 @@ def main() -> None:
     board_input = sys.stdin.read()
     try:
         board = parse_board(board_input)
-        engine = GameEngine([list(row) for row in board.rows])
+        game_timer = GameTimer()
+        engine = GameEngine(
+            rows=[list(row) for row in board.rows],
+            movement_rules=MovementRules(),
+            move_executor=MoveExecutor(),
+            game_timer=game_timer,
+            collision_resolver=CollisionResolver(),
+            pawn_promoter=PawnPromoter(),
+            game_end_detector=GameEndDetector(),
+        )
         commands = parse_commands(board_input)
 
         for command in commands:

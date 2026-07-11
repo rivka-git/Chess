@@ -29,15 +29,18 @@ class GameEngine:
         rows: list[list[str]] | None = None,
         movement_rules: MovementRules | None = None,
         move_executor: MoveExecutor | None = None,
+        game_timer: GameTimer | None = None,
+        collision_resolver: CollisionResolver | None = None,
+        pawn_promoter: PawnPromoter | None = None,
+        game_end_detector: GameEndDetector | None = None,
     ) -> None:
         self.board = Board(rows or [["."]]) 
         self.movement_rules = movement_rules or MovementRules()
         self.move_executor = move_executor or MoveExecutor()
-
-        self.game_timer = GameTimer()
-        self.collision_resolver = CollisionResolver()
-        self.pawn_promoter = PawnPromoter()
-        self.game_end_detector = GameEndDetector()
+        self.game_timer = game_timer or GameTimer()
+        self.collision_resolver = collision_resolver or CollisionResolver()
+        self.pawn_promoter = pawn_promoter or PawnPromoter()
+        self.game_end_detector = game_end_detector or GameEndDetector()
         self.input_handler = InputHandler(self.game_timer, self.movement_rules)
 
         self.time_ms = 0
