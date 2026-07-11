@@ -2,20 +2,41 @@
 
 import io
 import sys
+from unittest.mock import MagicMock
 
-from engine.game_engine import GameEngine
-from rules.rule_engine import MovementRules
+from engine.game_engine import GameEngine, GameEndDetector
+from rules.rule_engine import MovementRules, MoveExecutor, PawnPromoter
+from realtime.motion import GameTimer
+from realtime.real_time_arbiter import CollisionResolver
 import app
 
 
+def make_engine(rows, **kwargs):
+    defaults = dict(
+        movement_rules=MovementRules(),
+        move_executor=MoveExecutor(),
+        game_timer=GameTimer(),
+        collision_resolver=CollisionResolver(),
+        pawn_promoter=PawnPromoter(),
+        game_end_detector=GameEndDetector(),
+    )
+    defaults.update(kwargs)
+    return GameEngine(rows, **defaults)
+
+
 def test_click_selects_friendly_piece() -> None:
-    engine = GameEngine([["wK", "."], [".", "bR"]])
+    mock_rules = MagicMock(spec=MovementRules)
+    engine = make_engine([["wK", "."], [".", "bR"]], movement_rules=mock_rules)
     engine.click(50, 50)
     assert engine.selected_position == (0, 0)
 
 
 def test_click_on_empty_cell_requests_move() -> None:
-    engine = GameEngine([["wK", "."], [".", "bR"]])
+    mock_rules = MagicMock(spec=MovementRules)
+    mock_rules.is_legal_move.return_value = True
+    mock_rules.is_same_color.return_value = False
+    mock_timer = GameTimer()
+    engine = make_engine([["wK", "."], [".", "bR"]], movement_rules=mock_rules, game_timer=mock_timer)
     engine.click(50, 50)
     engine.click(150, 50)
     assert engine.selected_position is None
@@ -23,14 +44,18 @@ def test_click_on_empty_cell_requests_move() -> None:
 
 
 def test_click_outside_board_is_ignored() -> None:
-    engine = GameEngine([["wK", "."], [".", "bR"]])
+    mock_rules = MagicMock(spec=MovementRules)
+    engine = make_engine([["wK", "."], [".", "bR"]], movement_rules=mock_rules)
     engine.click(1000, 1000)
     assert engine.selected_position is None
     assert engine.pending_moves == []
 
 
 def test_jump_ignored_after_game_over():
-    engine = GameEngine([["wR", "bK", "."]])
+    mock_detector = MagicMock(spec=GameEndDetector)
+    mock_detector._get_kings_on_board.return_value = {"wK"}
+    mock_detector.check_king_captured.return_value = True
+    engine = make_engine([["wR", "bK", "."]], game_end_detector=mock_detector)
     engine.click(50, 50)
     engine.click(150, 50)
     engine.wait(1000)
@@ -40,8 +65,28 @@ def test_jump_ignored_after_game_over():
 
 def test_controller_accepts_injected_movement_rules() -> None:
     movement_rules = MovementRules()
-    engine = GameEngine([["wK", "."], [".", "bR"]], movement_rules=movement_rules)
+    engine = make_engine([["wK", "."], [".", "bR"]], movement_rules=movement_rules)
     assert engine.movement_rules is movement_rules
+
+
+def test_game_over_detected_via_mock_end_detector() -> None:
+    mock_detector = MagicMock(spec=GameEndDetector)
+    mock_detector._get_kings_on_board.return_value = {"wK"}
+    mock_detector.check_king_captured.return_value = True
+    engine = make_engine([["wR", "bK"]], game_end_detector=mock_detector)
+    engine.click(50, 50)
+    engine.click(150, 50)
+    engine.wait(1000)
+    assert engine.game_over
+
+
+def test_collision_resolver_called_via_mock() -> None:
+    mock_resolver = MagicMock(spec=CollisionResolver)
+    mock_resolver.resolve_collisions.return_value = ([], [])
+    mock_resolver.destroy_pieces.return_value = None
+    engine = make_engine([["wR", "."]], collision_resolver=mock_resolver)
+    engine.wait(1000)
+    mock_resolver.resolve_collisions.assert_called_once()
 
 
 def test_main_function_processes_board_input(monkeypatch: object, capsys: object) -> None:
