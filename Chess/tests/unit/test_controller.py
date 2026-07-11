@@ -35,12 +35,11 @@ def test_click_on_empty_cell_requests_move() -> None:
     mock_rules = MagicMock(spec=MovementRules)
     mock_rules.is_legal_move.return_value = True
     mock_rules.is_same_color.return_value = False
-    mock_timer = GameTimer()
-    engine = make_engine([["wK", "."], [".", "bR"]], movement_rules=mock_rules, game_timer=mock_timer)
+    engine = make_engine([["wK", "."], [".", "bR"]], movement_rules=mock_rules)
     engine.click(50, 50)
     engine.click(150, 50)
-    assert engine.selected_position is None
-    assert len(engine.pending_moves) == 1
+    engine.wait(1000)
+    assert engine.print_board() == ". wK\n. bR"
 
 
 def test_click_outside_board_is_ignored() -> None:
@@ -48,7 +47,7 @@ def test_click_outside_board_is_ignored() -> None:
     engine = make_engine([["wK", "."], [".", "bR"]], movement_rules=mock_rules)
     engine.click(1000, 1000)
     assert engine.selected_position is None
-    assert engine.pending_moves == []
+    assert engine.print_board() == "wK .\n. bR"
 
 
 def test_jump_ignored_after_game_over():
@@ -58,8 +57,9 @@ def test_jump_ignored_after_game_over():
     engine.click(50, 50)
     engine.click(150, 50)
     engine.wait(1000)
+    board_before = engine.print_board()
     engine.jump(250, 50)
-    assert engine.airborne == []
+    assert engine.print_board() == board_before
 
 
 def test_controller_accepts_injected_movement_rules() -> None:

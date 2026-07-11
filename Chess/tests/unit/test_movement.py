@@ -213,4 +213,5 @@ def test_moving_piece_cannot_jump() -> None:
     engine.click(50, 50)
     engine.click(150, 50)
     engine.jump(50, 50)
-    assert engine.airborne == []
+    engine.wait(1000)
+    assert engine.board.rows[0][1] == "wR"  # זז ליעד, לא קפץ

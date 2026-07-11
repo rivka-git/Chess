@@ -89,14 +89,6 @@ class GameEngine:
         return self.board.to_canonical_string()
 
     @property
-    def pending_moves(self) -> list[tuple[tuple[int, int], tuple[int, int], int]]:
-        return self.game_timer.pending_moves
-
-    @property
-    def airborne(self) -> list[tuple[tuple[int, int], int]]:
-        return self.game_timer.airborne
-
-    @property
     def selected_position(self) -> tuple[int, int] | None:
         return self.input_handler.selected_position
 
