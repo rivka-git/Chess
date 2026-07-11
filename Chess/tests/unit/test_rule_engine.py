@@ -79,17 +79,13 @@ def test_no_promotion_mid_board():
 def test_game_end_detector_no_king_captured():
     from engine.game_engine import GameEndDetector
     board = make_board([["wK", "bK"]])
-    detector = GameEndDetector()
-    kings_before = detector._get_kings_on_board(board)
-    assert not detector.check_king_captured(board, kings_before)
+    assert not GameEndDetector().is_game_over(board)
 
 
 def test_game_end_detector_king_captured():
     from engine.game_engine import GameEndDetector
     board = make_board([["wK", "."]])
-    detector = GameEndDetector()
-    kings_before = {"wK", "bK"}
-    assert detector.check_king_captured(board, kings_before)
+    assert GameEndDetector().is_game_over(board)
 
 
 def test_game_engine_selected_position_setter():

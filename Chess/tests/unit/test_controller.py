@@ -53,8 +53,7 @@ def test_click_outside_board_is_ignored() -> None:
 
 def test_jump_ignored_after_game_over():
     mock_detector = MagicMock(spec=GameEndDetector)
-    mock_detector._get_kings_on_board.return_value = {"wK"}
-    mock_detector.check_king_captured.return_value = True
+    mock_detector.is_game_over.return_value = True
     engine = make_engine([["wR", "bK", "."]], game_end_detector=mock_detector)
     engine.click(50, 50)
     engine.click(150, 50)
@@ -71,8 +70,7 @@ def test_controller_accepts_injected_movement_rules() -> None:
 
 def test_game_over_detected_via_mock_end_detector() -> None:
     mock_detector = MagicMock(spec=GameEndDetector)
-    mock_detector._get_kings_on_board.return_value = {"wK"}
-    mock_detector.check_king_captured.return_value = True
+    mock_detector.is_game_over.return_value = True
     engine = make_engine([["wR", "bK"]], game_end_detector=mock_detector)
     engine.click(50, 50)
     engine.click(150, 50)

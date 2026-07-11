@@ -12,9 +12,9 @@ from input.input_handler import InputHandler
 class GameEndDetector:
     """Detect when the game has ended."""
 
-    def check_king_captured(self, board: Board, kings_before: set[str]) -> bool:
-        kings_now = self._get_kings_on_board(board)
-        return bool(kings_before - kings_now)
+    def is_game_over(self, board: Board) -> bool:
+        kings = self._get_kings_on_board(board)
+        return len(kings) < 2
 
     def _get_kings_on_board(self, board: Board) -> set[str]:
         pieces = {cell for row in board.rows for cell in row}
@@ -82,10 +82,9 @@ class GameEngine:
         self.collision_resolver.destroy_pieces(self.board, pieces_destroyed)
 
         for start, end in moves_to_execute:
-            kings_before = self.game_end_detector._get_kings_on_board(self.board)
             self.move_executor.apply_move(self.board, start, end)
             self.pawn_promoter.promote_pawns(self.board, start, end)
-            if self.game_end_detector.check_king_captured(self.board, kings_before):
+            if self.game_end_detector.is_game_over(self.board):
                 self.game_over = True
 
         self.game_timer.expire_airborne()
