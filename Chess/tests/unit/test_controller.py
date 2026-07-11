@@ -28,7 +28,9 @@ def test_click_selects_friendly_piece() -> None:
     mock_rules = MagicMock(spec=MovementRules)
     engine = make_engine([["wK", "."], [".", "bR"]], movement_rules=mock_rules)
     engine.click(50, 50)
-    assert engine.selected_position == (0, 0)
+    engine.click(150, 50)
+    engine.wait(1000)
+    assert engine.print_board() == ". wK\n. bR"
 
 
 def test_click_on_empty_cell_requests_move() -> None:
@@ -46,7 +48,6 @@ def test_click_outside_board_is_ignored() -> None:
     mock_rules = MagicMock(spec=MovementRules)
     engine = make_engine([["wK", "."], [".", "bR"]], movement_rules=mock_rules)
     engine.click(1000, 1000)
-    assert engine.selected_position is None
     assert engine.print_board() == "wK .\n. bR"
 
 

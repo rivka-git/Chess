@@ -88,10 +88,3 @@ def test_game_end_detector_king_captured():
     assert GameEndDetector().is_game_over(board)
 
 
-def test_game_engine_selected_position_setter():
-    from engine.game_engine import GameEngine
-    engine = GameEngine([["wK", "."]])
-    engine.selected_position = (0, 0)
-    assert engine.selected_position == (0, 0)
-    engine.selected_position = None
-    assert engine.selected_position is None

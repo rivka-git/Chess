@@ -87,11 +87,3 @@ class GameEngine:
 
     def print_board(self) -> str:
         return self.board.to_canonical_string()
-
-    @property
-    def selected_position(self) -> tuple[int, int] | None:
-        return self.input_handler.selected_position
-
-    @selected_position.setter
-    def selected_position(self, value: tuple[int, int] | None) -> None:
-        self.input_handler.selected_position = value
