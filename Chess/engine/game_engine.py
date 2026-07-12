@@ -71,14 +71,11 @@ class GameEngine:
         arrived_moves = self.game_timer.get_arrived_moves()
         airborne_positions = self.game_timer.get_airborne_positions()
 
-        moves_to_execute, pieces_destroyed = self.collision_resolver.resolve_collisions(
-            self.board, arrived_moves, airborne_positions
+        moves_executed = self.collision_resolver.resolve_collisions(
+            self.board, arrived_moves, airborne_positions, self.move_executor
         )
 
-        self.collision_resolver.destroy_pieces(self.board, pieces_destroyed)
-
-        for start, end in moves_to_execute:
-            self.move_executor.apply_move(self.board, start, end)
+        for start, end in moves_executed:
             self.pawn_promoter.promote_pawns(self.board, start, end)
             if self.game_end_detector.is_game_over(self.board):
                 self.game_over = True

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from model.board import Board
+from rules.rule_engine import MoveExecutor
 
 
 class CollisionResolver:
@@ -13,18 +14,16 @@ class CollisionResolver:
         board: Board,
         arrived_moves: list[tuple[tuple[int, int], tuple[int, int], int]],
         airborne_positions: list[tuple[int, int]],
-    ) -> tuple[list[tuple[tuple[int, int], tuple[int, int]]], list[tuple[int, int]]]:
-        moves_to_execute = []
-        pieces_destroyed = []
+        move_executor: MoveExecutor,
+    ) -> list[tuple[tuple[int, int], tuple[int, int]]]:
+        moves_executed = []
 
         for start, end, arrival_time in arrived_moves:
-            if end in airborne_positions:
-                pieces_destroyed.append(start)
+            if end not in airborne_positions:
+                move_executor.apply_move(board, start, end)
+                moves_executed.append((start, end))
             else:
-                moves_to_execute.append((start, end))
+                start_row, start_col = start
+                board.rows[start_row][start_col] = "."
 
-        return moves_to_execute, pieces_destroyed
-
-    def destroy_pieces(self, board: Board, positions: list[tuple[int, int]]) -> None:
-        for row, col in positions:
-            board.rows[row][col] = "."
+        return moves_executed

@@ -81,8 +81,7 @@ def test_game_over_detected_via_mock_end_detector() -> None:
 
 def test_collision_resolver_called_via_mock() -> None:
     mock_resolver = MagicMock(spec=CollisionResolver)
-    mock_resolver.resolve_collisions.return_value = ([], [])
-    mock_resolver.destroy_pieces.return_value = None
+    mock_resolver.resolve_collisions.return_value = []
     engine = make_engine([["wR", "."]], collision_resolver=mock_resolver)
     engine.wait(1000)
     mock_resolver.resolve_collisions.assert_called_once()

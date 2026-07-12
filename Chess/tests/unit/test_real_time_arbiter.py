@@ -78,24 +78,20 @@ def test_has_pending_moves():
 # --- CollisionResolver ---
 
 def test_no_collision():
+    from rules.rule_engine import MoveExecutor
     board = Board([["wR", ".", "."]])
     resolver = CollisionResolver()
-    moves, destroyed = resolver.resolve_collisions(board, [((0, 0), (0, 2), 2000)], [])
+    moves = resolver.resolve_collisions(board, [((0, 0), (0, 2), 2000)], [], MoveExecutor())
     assert moves == [((0, 0), (0, 2))]
-    assert destroyed == []
+    assert board.rows[0][2] == "wR"
 
 
 def test_collision_with_airborne():
+    from rules.rule_engine import MoveExecutor
     board = Board([["wR", ".", "bR"]])
     resolver = CollisionResolver()
-    moves, destroyed = resolver.resolve_collisions(
-        board, [((0, 2), (0, 0), 2000)], [(0, 0)]
+    moves = resolver.resolve_collisions(
+        board, [((0, 2), (0, 0), 2000)], [(0, 0)], MoveExecutor()
     )
     assert moves == []
-    assert destroyed == [(0, 2)]
-
-
-def test_destroy_pieces():
-    board = Board([["wR", "bK"]])
-    CollisionResolver().destroy_pieces(board, [(0, 1)])
-    assert board.rows[0][1] == "."
+    assert board.rows[0][2] == "."
