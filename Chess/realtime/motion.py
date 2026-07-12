@@ -48,3 +48,6 @@ class GameTimer:
 
     def has_pending_moves(self) -> bool:
         return bool(self.pending_moves)
+
+    def is_piece_airborne(self, position: tuple[int, int]) -> bool:
+        return any(pos == position for pos, land_time in self.airborne)

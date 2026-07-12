@@ -56,7 +56,7 @@ class InputHandler:
         if self.game_timer.is_piece_in_transit(position):
             return
 
-        if any(pos == position for pos, land_time in self.game_timer.airborne):
+        if self.game_timer.is_piece_airborne(position):
             return
 
         on_jump_requested(position)
