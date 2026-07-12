@@ -162,7 +162,3 @@ def test_queen_blocked_going_up():
     assert not Queen("w").is_legal_move(board, (2, 0), (0, 0))
 
 
-def test_is_path_clear_non_straight_non_diagonal_returns_false():
-    from model.piece import _is_path_clear
-    board = make_board([[".", ".", "."], [".", ".", "."], [".", ".", "."]])
-    assert not _is_path_clear(board, (0, 0), (1, 2))

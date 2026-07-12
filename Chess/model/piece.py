@@ -100,34 +100,18 @@ class Pawn(Piece):
         return False
 
 
+def _sign(n: int) -> int:
+    return (n > 0) - (n < 0)
+
+
 def _is_path_clear(board: object, start: tuple[int, int], end: tuple[int, int]) -> bool:
     """Return whether every intermediate square between start and end is empty."""
-    start_row, start_col = start
-    end_row, end_col = end
-
-    if start_row == end_row:
-        step = 1 if end_col > start_col else -1
-        for col in range(start_col + step, end_col, step):
-            if board.rows[start_row][col] != ".":
-                return False
-        return True
-
-    if start_col == end_col:
-        step = 1 if end_row > start_row else -1
-        for row in range(start_row + step, end_row, step):
-            if board.rows[row][start_col] != ".":
-                return False
-        return True
-
-    if abs(end_row - start_row) == abs(end_col - start_col):
-        row_step = 1 if end_row > start_row else -1
-        col_step = 1 if end_col > start_col else -1
-        row, col = start_row + row_step, start_col + col_step
-        while (row, col) != (end_row, end_col):
-            if board.rows[row][col] != ".":
-                return False
-            row += row_step
-            col += col_step
-        return True
-
-    return False
+    row_step = _sign(end[0] - start[0])
+    col_step = _sign(end[1] - start[1])
+    row, col = start[0] + row_step, start[1] + col_step
+    while (row, col) != (end[0], end[1]):
+        if board.rows[row][col] != ".":
+            return False
+        row += row_step
+        col += col_step
+    return True
