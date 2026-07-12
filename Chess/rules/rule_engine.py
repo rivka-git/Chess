@@ -65,11 +65,7 @@ class MovementRules:
     def is_same_color(self, piece_a: str, piece_b: str) -> bool:
         return piece_a != "." and piece_b != "." and piece_a[0] == piece_b[0]
 
-
-class PawnPromoter:
-    """Promote pawns that reach the opponent's back row."""
-
-    def promote_pawns(self, board: Board, start: tuple[int, int], end: tuple[int, int]) -> None:
+    def promote_pawns(self, board: Board, end: tuple[int, int]) -> None:
         end_row, end_col = end
         piece = board.rows[end_row][end_col]
         if piece == "wP" and end_row == 0:
