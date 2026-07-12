@@ -20,10 +20,14 @@ class CollisionResolver:
 
         for start, end, arrival_time in arrived_moves:
             if end not in airborne_positions:
+                self._capture_piece(board, end)
                 move_executor.apply_move(board, start, end)
                 moves_executed.append((start, end))
             else:
-                start_row, start_col = start
-                board.rows[start_row][start_col] = "."
+                self._capture_piece(board, start)
 
         return moves_executed
+
+    def _capture_piece(self, board: Board, position: tuple[int, int]) -> None:
+        row, col = position
+        board.rows[row][col] = "."

@@ -22,9 +22,8 @@ class MoveExecutor:
     def apply_move(self, board: Board, start: tuple[int, int], end: tuple[int, int]) -> None:
         start_row, start_col = start
         end_row, end_col = end
-        piece = board.rows[start_row][start_col]
+        board.rows[end_row][end_col] = board.rows[start_row][start_col]
         board.rows[start_row][start_col] = "."
-        board.rows[end_row][end_col] = piece
 
 
 class MovementRules:
