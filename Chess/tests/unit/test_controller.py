@@ -82,6 +82,8 @@ def test_collision_resolver_called_via_mock() -> None:
     mock_resolver = MagicMock(spec=CollisionResolver)
     mock_resolver.resolve_collisions.return_value = []
     engine = make_engine([["wR", "."]], collision_resolver=mock_resolver)
+    engine.click(50, 50)
+    engine.click(150, 50)
     engine.wait(1000)
     mock_resolver.resolve_collisions.assert_called_once()
 

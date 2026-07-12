@@ -31,6 +31,10 @@ class InputHandler:
         target_position = (row, col)
         target_piece = board.rows[row][col]
 
+        if target_position == self.selected_position:
+            self.selected_position = None
+            return
+
         if target_piece != "." and self._is_own_piece(board, self.selected_position, target_position):
             self.selected_position = target_position
             return

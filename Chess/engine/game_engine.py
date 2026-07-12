@@ -14,7 +14,7 @@ class GameEndDetector:
 
     def is_game_over(self, board: Board) -> bool:
         pieces = {cell for row in board.rows for cell in row}
-        return len(pieces & {"wK", "bK"}) < 2
+        return len(pieces & {"wK", "bK"}) == 1
 
 
 class GameEngine:
@@ -39,6 +39,9 @@ class GameEngine:
 
         self.time_ms = 0
         self.game_over = False
+        self._initial_king_count = sum(
+            1 for row in self.board.rows for cell in row if cell in {"wK", "bK"}
+        )
 
     def click(self, x: int, y: int) -> None:
         # Ensures board is up to date before processing input (relevant for real-time play)
@@ -69,14 +72,19 @@ class GameEngine:
         arrived_moves = self.game_timer.get_arrived_moves()
         airborne_positions = self.game_timer.get_airborne_positions()
 
-        moves_executed = self.collision_resolver.resolve_collisions(
-            self.board, arrived_moves, airborne_positions, self.move_executor
-        )
-
-        for start, end in moves_executed:
-            self.movement_rules.promote_pawns(self.board, end)
-            if self.game_end_detector.is_game_over(self.board):
-                self.game_over = True
+        for move in arrived_moves:
+            if self.game_over:
+                break
+            kings_before = sum(1 for row in self.board.rows for cell in row if cell in {"wK", "bK"})
+            executed = self.collision_resolver.resolve_collisions(
+                self.board, [move], airborne_positions, self.move_executor
+            )
+            for start, end in executed:
+                self.movement_rules.promote_pawns(self.board, end)
+                kings_after = sum(1 for row in self.board.rows for cell in row if cell in {"wK", "bK"})
+                if kings_after < kings_before:
+                    self.game_over = True
+                    break
 
         self.game_timer.expire_airborne()
 
