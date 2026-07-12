@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from model.board import Board
-from rules.rule_engine import MovementRules, MoveExecutor, PawnPromoter
+from rules.rule_engine import MovementRules, MoveExecutor
 from realtime.motion import GameTimer
 from realtime.real_time_arbiter import CollisionResolver
 from input.input_handler import InputHandler
@@ -27,7 +27,6 @@ class GameEngine:
         move_executor: MoveExecutor | None = None,
         game_timer: GameTimer | None = None,
         collision_resolver: CollisionResolver | None = None,
-        pawn_promoter: PawnPromoter | None = None,
         game_end_detector: GameEndDetector | None = None,
     ) -> None:
         self.board = Board(rows or [["."]]) 
@@ -35,7 +34,6 @@ class GameEngine:
         self.move_executor = move_executor or MoveExecutor()
         self.game_timer = game_timer or GameTimer()
         self.collision_resolver = collision_resolver or CollisionResolver()
-        self.pawn_promoter = pawn_promoter or PawnPromoter()
         self.game_end_detector = game_end_detector or GameEndDetector()
         self.input_handler = InputHandler(self.game_timer, self.movement_rules)
 
@@ -76,7 +74,7 @@ class GameEngine:
         )
 
         for start, end in moves_executed:
-            self.pawn_promoter.promote_pawns(self.board, start, end)
+            self.movement_rules.promote_pawns(self.board, end)
             if self.game_end_detector.is_game_over(self.board):
                 self.game_over = True
 

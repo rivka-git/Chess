@@ -6,7 +6,7 @@ import sys
 
 from engine.game_engine import GameEngine, GameEndDetector
 from ioutils.board_parser import parse_board, parse_commands
-from rules.rule_engine import MovementRules, MoveExecutor, PawnPromoter
+from rules.rule_engine import MovementRules, MoveExecutor
 from realtime.motion import GameTimer
 from realtime.real_time_arbiter import CollisionResolver
 
@@ -23,7 +23,6 @@ def main() -> None:
             move_executor=MoveExecutor(),
             game_timer=game_timer,
             collision_resolver=CollisionResolver(),
-            pawn_promoter=PawnPromoter(),
             game_end_detector=GameEndDetector(),
         )
         commands = parse_commands(board_input)

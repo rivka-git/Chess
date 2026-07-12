@@ -1,7 +1,7 @@
 """Unit tests for rules.rule_engine."""
 
 from model.board import Board
-from rules.rule_engine import MovementRules, MoveExecutor, PawnPromoter
+from rules.rule_engine import MovementRules, MoveExecutor
 
 
 def make_board(rows):
@@ -56,23 +56,23 @@ def test_apply_move_captures_enemy():
     assert board.rows[0][1] == "wR"
 
 
-# --- PawnPromoter ---
+# --- promote_pawns ---
 
 def test_white_pawn_promotes():
     board = make_board([["wP", "."], [".", "."]])
-    PawnPromoter().promote_pawns(board, (1, 0), (0, 0))
+    MovementRules().promote_pawns(board, (0, 0))
     assert board.rows[0][0] == "wQ"
 
 
 def test_black_pawn_promotes():
     board = make_board([[".", "."], ["bP", "."]])
-    PawnPromoter().promote_pawns(board, (0, 0), (1, 0))
+    MovementRules().promote_pawns(board, (1, 0))
     assert board.rows[1][0] == "bQ"
 
 
 def test_no_promotion_mid_board():
     board = make_board([[".", "."], ["wP", "."], [".", "."]])
-    PawnPromoter().promote_pawns(board, (2, 0), (1, 0))
+    MovementRules().promote_pawns(board, (1, 0))
     assert board.rows[1][0] == "wP"
 
 

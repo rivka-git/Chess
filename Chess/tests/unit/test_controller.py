@@ -5,7 +5,7 @@ import sys
 from unittest.mock import MagicMock
 
 from engine.game_engine import GameEngine, GameEndDetector
-from rules.rule_engine import MovementRules, MoveExecutor, PawnPromoter
+from rules.rule_engine import MovementRules, MoveExecutor
 from realtime.motion import GameTimer
 from realtime.real_time_arbiter import CollisionResolver
 import app
@@ -17,7 +17,6 @@ def make_engine(rows, **kwargs):
         move_executor=MoveExecutor(),
         game_timer=GameTimer(),
         collision_resolver=CollisionResolver(),
-        pawn_promoter=PawnPromoter(),
         game_end_detector=GameEndDetector(),
     )
     defaults.update(kwargs)
