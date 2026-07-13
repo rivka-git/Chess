@@ -84,7 +84,7 @@ class GameEngine:
                 self.board, [move], airborne_positions, self.move_executor
             )
             for start, end in executed:
-                self.movement_rules.promote_pawns(self.board, end)
+                self.movement_rules.apply_end_of_move(self.board, end)
                 kings_after = sum(1 for row in self.board.rows for cell in row if cell in {"wK", "bK"})
                 if kings_after < kings_before:
                     self.game_over = True

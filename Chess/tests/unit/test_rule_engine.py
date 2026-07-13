@@ -56,23 +56,23 @@ def test_apply_move_captures_enemy():
     assert board.rows[0][1] == "wR"
 
 
-# --- promote_pawns ---
+# --- apply_end_of_move ---
 
 def test_white_pawn_promotes():
     board = make_board([["wP", "."], [".", "."]])
-    MovementRules().promote_pawns(board, (0, 0))
+    MovementRules().apply_end_of_move(board, (0, 0))
     assert board.rows[0][0] == "wQ"
 
 
 def test_black_pawn_promotes():
     board = make_board([[".", "."], ["bP", "."]])
-    MovementRules().promote_pawns(board, (1, 0))
+    MovementRules().apply_end_of_move(board, (1, 0))
     assert board.rows[1][0] == "bQ"
 
 
 def test_no_promotion_mid_board():
     board = make_board([[".", "."], ["wP", "."], [".", "."]])
-    MovementRules().promote_pawns(board, (1, 0))
+    MovementRules().apply_end_of_move(board, (1, 0))
     assert board.rows[1][0] == "wP"
 
 

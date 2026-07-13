@@ -20,6 +20,9 @@ class Piece(ABC):
     def is_legal_move(self, board: object, start: tuple[int, int], end: tuple[int, int]) -> bool:
         """Return whether moving from start to end is legal for this piece."""
 
+    def on_reach_end(self, board: object, position: tuple[int, int]) -> None:
+        """Called when a piece reaches the end of the board. Override to define promotion or other behavior."""
+
     def __str__(self) -> str:
         return self.color + self.piece_type
 
@@ -98,6 +101,14 @@ class Pawn(Piece):
         if abs_col == 1 and row_delta == direction:
             return target != "." and target[0] != self.color
         return False
+
+    def on_reach_end(self, board: object, position: tuple[int, int]) -> None:
+        row, col = position
+        # Promote to queen upon reaching the opposite end of the board
+        if self.color == "w" and row == 0:
+            board.rows[row][col] = "wQ"
+        elif self.color == "b" and row == board.height - 1:
+            board.rows[row][col] = "bQ"
 
 
 def _sign(n: int) -> int:

@@ -65,10 +65,11 @@ class MovementRules:
     def is_same_color(self, piece_a: str, piece_b: str) -> bool:
         return piece_a != "." and piece_b != "." and piece_a[0] == piece_b[0]
 
-    def promote_pawns(self, board: Board, end: tuple[int, int]) -> None:
+    def apply_end_of_move(self, board: Board, end: tuple[int, int]) -> None:
         end_row, end_col = end
-        piece = board.rows[end_row][end_col]
-        if piece == "wP" and end_row == 0:
-            board.rows[end_row][end_col] = "wQ"
-        elif piece == "bP" and end_row == board.height - 1:
-            board.rows[end_row][end_col] = "bQ"
+        token = board.rows[end_row][end_col]
+        if token == ".":
+            return
+        piece = self._registry.rules.get(token[1])
+        if piece is not None:
+            piece(token[0]).on_reach_end(board, end)
