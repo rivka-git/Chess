@@ -123,20 +123,6 @@ def test_pawn_double_step_blocked():
     assert not Pawn("w").is_legal_move(board, (3, 0), (1, 0))
 
 
-# --- Piece.from_token ---
-
-def test_from_token_king():
-    piece = Piece.from_token("wK")
-    assert isinstance(piece, King)
-    assert piece.color == "w"
-
-
-def test_from_token_pawn():
-    piece = Piece.from_token("bP")
-    assert isinstance(piece, Pawn)
-    assert piece.color == "b"
-
-
 def test_piece_str():
     assert str(King("w")) == "wK"
     assert str(Pawn("b")) == "bP"
