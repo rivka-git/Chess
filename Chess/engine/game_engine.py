@@ -43,6 +43,10 @@ class GameEngine:
             1 for row in self.board.rows for cell in row if cell in {"wK", "bK"}
         )
 
+    @classmethod
+    def from_board(cls, board: Board) -> GameEngine:
+        return cls(rows=[list(row) for row in board.rows])
+
     def click(self, x: int, y: int) -> None:
         # Ensures board is up to date before processing input (relevant for real-time play)
         self._apply_arrived_moves()

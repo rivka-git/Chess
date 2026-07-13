@@ -4,21 +4,10 @@ from __future__ import annotations
 
 from engine.game_engine import GameEngine, GameEndDetector
 from ioutils.board_parser import read_input, parse_board, parse_commands, parse_command
-from rules.rule_engine import MovementRules, MoveExecutor
-from realtime.motion import GameTimer
-from realtime.real_time_arbiter import CollisionResolver
 
 
 def _build_engine(board_input: str) -> GameEngine:
-    board = parse_board(board_input)
-    return GameEngine(
-        rows=[list(row) for row in board.rows],
-        movement_rules=MovementRules(),
-        move_executor=MoveExecutor(),
-        game_timer=GameTimer(),
-        collision_resolver=CollisionResolver(),
-        game_end_detector=GameEndDetector(),
-    )
+    return GameEngine.from_board(parse_board(board_input))
 
 
 def _run_commands(engine: GameEngine, commands: list[str]) -> None:
