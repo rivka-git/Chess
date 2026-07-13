@@ -39,9 +39,7 @@ class GameEngine:
 
         self.time_ms = 0
         self.game_over = False
-        self._initial_king_count = sum(
-            1 for row in self.board.rows for cell in row if cell in {"wK", "bK"}
-        )
+        self._initial_king_count = self.board.count_kings()
 
     @classmethod
     def from_board(cls, board: Board) -> GameEngine:
@@ -79,13 +77,13 @@ class GameEngine:
         for move in arrived_moves:
             if self.game_over:
                 break
-            kings_before = sum(1 for row in self.board.rows for cell in row if cell in {"wK", "bK"})
+            kings_before = self.board.count_kings()
             executed = self.collision_resolver.resolve_collisions(
                 self.board, [move], airborne_positions, self.move_executor
             )
             for start, end in executed:
                 self.movement_rules.apply_end_of_move(self.board, end)
-                kings_after = sum(1 for row in self.board.rows for cell in row if cell in {"wK", "bK"})
+                kings_after = self.board.count_kings()
                 if kings_after < kings_before:
                     self.game_over = True
                     break

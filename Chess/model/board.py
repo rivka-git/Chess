@@ -27,5 +27,8 @@ class Board:
         self.height = len(self.rows)
         self.width = width
 
+    def count_kings(self) -> int:
+        return sum(1 for row in self.rows for cell in row if cell in {"wK", "bK"})
+
     def to_canonical_string(self) -> str:
         return "\n".join(" ".join(row) for row in self.rows)
