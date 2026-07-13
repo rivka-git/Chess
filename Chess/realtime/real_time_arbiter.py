@@ -24,6 +24,7 @@ class CollisionResolver:
                 move_executor.apply_move(board, start, end)
                 moves_executed.append((start, end))
             else:
+                # If destination is occupied by an airborne piece, the moving piece is captured instead
                 self._capture_piece(board, start)
 
         return moves_executed

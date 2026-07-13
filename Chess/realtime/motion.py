@@ -15,6 +15,7 @@ class GameTimer:
 
     def add_move(self, start: tuple[int, int], end: tuple[int, int]) -> None:
         distance = max(abs(end[0] - start[0]), abs(end[1] - start[1]))
+        # Distance-based duration so longer moves take proportionally more time
         arrival_time = self.time_ms + TRANSIT_DURATION_MS * distance
         self.pending_moves.append((start, end, arrival_time))
 
