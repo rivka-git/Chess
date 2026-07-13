@@ -25,10 +25,15 @@ class InputHandler:
             return
 
         if self.selected_position is None:
-            if board.rows[row][col] != ".":
-                self.selected_position = (row, col)
-            return
+            self._on_no_selection(board, row, col)
+        else:
+            self._on_piece_selected(board, row, col, on_move_requested)
 
+    def _on_no_selection(self, board: Board, row: int, col: int) -> None:
+        if board.rows[row][col] != ".":
+            self.selected_position = (row, col)
+
+    def _on_piece_selected(self, board: Board, row: int, col: int, on_move_requested: callable) -> None:
         target_position = (row, col)
         target_piece = board.rows[row][col]
 
