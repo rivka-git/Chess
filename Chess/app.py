@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from engine.game_engine import GameEngine, GameEndDetector
+from engine.game_engine import GameEngine
 from ioutils.board_parser import read_input, parse_commands, parse_command, TextBoardParser
 from config import BOARD_FORMAT
 
@@ -17,17 +17,8 @@ def _create_parser():
 def _run_commands(engine: GameEngine, commands: list[str]) -> None:
     for command in commands:
         parsed = parse_command(command)
-        if parsed is None:
-            continue
-        name, args = parsed
-        if name == "click":
-            engine.click(*args)
-        elif name == "jump":
-            engine.jump(*args)
-        elif name == "wait":
-            engine.wait(*args)
-        elif name == "print":
-            print(engine.print_board())
+        if parsed is not None:
+            parsed.execute(engine)
 
 
 def main() -> None:

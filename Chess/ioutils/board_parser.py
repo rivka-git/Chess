@@ -71,16 +71,55 @@ def read_input() -> str:
     return sys.stdin.read()
 
 
-def parse_command(command: str) -> tuple[str, list[int]] | None:
+class Command(ABC):
+    """Abstract base class for game commands."""
+
+    @abstractmethod
+    def execute(self, engine) -> None:
+        """Execute the command on the given engine."""
+
+
+class ClickCommand(Command):
+    def __init__(self, x: int, y: int) -> None:
+        self.x, self.y = x, y
+
+    def execute(self, engine) -> None:
+        engine.click(self.x, self.y)
+
+
+class JumpCommand(Command):
+    def __init__(self, x: int, y: int) -> None:
+        self.x, self.y = x, y
+
+    def execute(self, engine) -> None:
+        engine.jump(self.x, self.y)
+
+
+class WaitCommand(Command):
+    def __init__(self, ms: int) -> None:
+        self.ms = ms
+
+    def execute(self, engine) -> None:
+        engine.wait(self.ms)
+
+
+class PrintCommand(Command):
+    def execute(self, engine) -> None:
+        print(engine.print_board())
+
+
+def parse_command(command: str) -> Command | None:
     parts = command.split()
     if not parts:
         return None
-    if parts[0] in {"click", "jump"} and len(parts) == 3:
-        return parts[0], [int(parts[1]), int(parts[2])]
+    if parts[0] == "click" and len(parts) == 3:
+        return ClickCommand(int(parts[1]), int(parts[2]))
+    if parts[0] == "jump" and len(parts) == 3:
+        return JumpCommand(int(parts[1]), int(parts[2]))
     if parts[0] == "wait" and len(parts) == 2:
-        return parts[0], [int(parts[1])]
+        return WaitCommand(int(parts[1]))
     if parts[0] == "print" and len(parts) == 2 and parts[1] == "board":
-        return parts[0], []
+        return PrintCommand()
     return None
 
 
