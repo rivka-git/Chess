@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import sys
+
 from model.board import Board
 from rules.rule_engine import PieceRegistry, MovementRules
 
@@ -47,6 +49,23 @@ def parse_board(board_string: str, registry: PieceRegistry | None = None) -> Boa
     board_rows = [_parse_row(line, reg) for line in board_lines if line.split()]
 
     return Board(board_rows)
+
+
+def read_input() -> str:
+    return sys.stdin.read()
+
+
+def parse_command(command: str) -> tuple[str, list[int]] | None:
+    parts = command.split()
+    if not parts:
+        return None
+    if parts[0] in {"click", "jump"} and len(parts) == 3:
+        return parts[0], [int(parts[1]), int(parts[2])]
+    if parts[0] == "wait" and len(parts) == 2:
+        return parts[0], [int(parts[1])]
+    if parts[0] == "print" and len(parts) == 2 and parts[1] == "board":
+        return parts[0], []
+    return None
 
 
 def parse_commands(board_string: str) -> list[str]:
