@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-TRANSIT_DURATION_MS = 1000
+from config import TRANSIT_DURATION_MS
 
 
 class GameTimer:

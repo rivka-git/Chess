@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from config import CELL_SIZE_PX
 from model.board import Board
 from rules.rule_engine import MovementRules
 from realtime.motion import GameTimer
@@ -16,8 +17,8 @@ class InputHandler:
         self.selected_position: tuple[int, int] | None = None
 
     def handle_click(self, board: Board, x: int, y: int, on_move_requested: callable) -> None:
-        row = y // 100
-        col = x // 100
+        row = y // CELL_SIZE_PX
+        col = x // CELL_SIZE_PX
 
         if not self._is_inside_board(board, row, col):
             self.selected_position = None
@@ -46,8 +47,8 @@ class InputHandler:
         self.selected_position = None
 
     def handle_jump(self, board: Board, x: int, y: int, on_jump_requested: callable) -> None:
-        row = y // 100
-        col = x // 100
+        row = y // CELL_SIZE_PX
+        col = x // CELL_SIZE_PX
 
         if not self._is_inside_board(board, row, col):
             return
