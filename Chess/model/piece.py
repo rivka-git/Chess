@@ -26,13 +26,6 @@ class Piece(ABC):
     def __str__(self) -> str:
         return self.color + self.piece_type
 
-    @staticmethod
-    def from_token(token: str) -> Piece:
-        color = token[0]
-        piece_type = token[1]
-        registry = {"K": King, "Q": Queen, "R": Rook, "B": Bishop, "N": Knight, "P": Pawn}
-        return registry[piece_type](color)
-
 
 class King(Piece):
     piece_type = "K"
