@@ -3,9 +3,25 @@
 from __future__ import annotations
 
 import sys
+from abc import ABC, abstractmethod
 
 from model.board import Board
 from rules.rule_engine import PieceRegistry, MovementRules
+
+
+class BoardParser(ABC):
+    """Abstract base class for board parsers."""
+
+    @abstractmethod
+    def parse(self, data) -> Board:
+        """Parse input data into a Board."""
+
+
+class TextBoardParser(BoardParser):
+    """Parse a board from a text string."""
+
+    def parse(self, data: str) -> Board:
+        return parse_board(data)
 
 
 def _extract_board_lines(board_string: str) -> list[str]:

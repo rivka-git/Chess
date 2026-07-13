@@ -3,8 +3,15 @@
 from __future__ import annotations
 
 from engine.game_engine import GameEngine, GameEndDetector
-from ioutils.board_parser import read_input, parse_board, parse_commands, parse_command
+from ioutils.board_parser import read_input, parse_commands, parse_command, TextBoardParser
+from config import BOARD_FORMAT
 
+
+def _create_parser():
+    # Controlled by BOARD_FORMAT in config.py to support future binary board format
+    if BOARD_FORMAT == "text":
+        return TextBoardParser()
+    raise ValueError(f"Unsupported board format: {BOARD_FORMAT}")
 
 
 def _run_commands(engine: GameEngine, commands: list[str]) -> None:
@@ -27,7 +34,8 @@ def main() -> None:
     """Run the board interaction program from standard input."""
     board_input = read_input()
     try:
-        _run_commands(GameEngine.from_board(parse_board(board_input)), parse_commands(board_input))
+        parser = _create_parser()
+        _run_commands(GameEngine.from_board(parser.parse(board_input)), parse_commands(board_input))
     except ValueError as error:
         print(f"ERROR {error}")
 
