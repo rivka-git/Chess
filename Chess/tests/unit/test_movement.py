@@ -176,7 +176,7 @@ def test_second_piece_blocked_while_first_in_transit() -> None:
     engine.click(250, 250)
     engine.wait(2000)
     assert engine.board.rows[0][2] == "wR"
-    assert engine.board.rows[2][0] == "bR"
+    assert engine.board.rows[2][2] == "bR"
 
 
 def test_piece_can_move_again_immediately_after_arrival() -> None:

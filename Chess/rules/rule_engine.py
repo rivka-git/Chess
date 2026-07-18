@@ -22,8 +22,8 @@ class MoveExecutor:
     def apply_move(self, board: Board, start: tuple[int, int], end: tuple[int, int]) -> None:
         start_row, start_col = start
         end_row, end_col = end
-        board.rows[end_row][end_col] = board.rows[start_row][start_col]
-        board.rows[start_row][start_col] = "."
+        board.set_piece(end_row, end_col, board.get_piece(start_row, start_col))
+        board.set_piece(start_row, start_col, ".")
 
 
 class MovementRules:
@@ -48,8 +48,8 @@ class MovementRules:
 
         start_row, start_col = start
         end_row, end_col = end
-        start_token = board.rows[start_row][start_col]
-        target_token = board.rows[end_row][end_col]
+        start_token = board.get_piece(start_row, start_col)
+        target_token = board.get_piece(end_row, end_col)
 
         if target_token != "." and start_token[0] == target_token[0]:
             return False
@@ -67,7 +67,7 @@ class MovementRules:
 
     def apply_end_of_move(self, board: Board, end: tuple[int, int]) -> None:
         end_row, end_col = end
-        token = board.rows[end_row][end_col]
+        token = board.get_piece(end_row, end_col)
         if token == ".":
             return
         piece = self._registry.rules.get(token[1])

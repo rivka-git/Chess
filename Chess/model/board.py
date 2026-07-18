@@ -27,6 +27,15 @@ class Board:
         self.height = len(self.rows)
         self.width = width
 
+    def get_piece(self, row: int, col: int) -> str:
+        return self.rows[row][col]
+
+    def set_piece(self, row: int, col: int, token: str) -> None:
+        self.rows[row][col] = token
+
+    def is_empty(self, row: int, col: int) -> bool:
+        return self.rows[row][col] == "."
+
     def count_kings(self) -> int:
         return sum(1 for row in self.rows for cell in row if cell in {"wK", "bK"})
 

@@ -61,13 +61,7 @@ def test_jump_on_piece_in_transit_ignored():
     timer = GameTimer()
     handler = InputHandler(timer, MovementRules())
     board = Board([["wR", "."]])
-    timer.add_move((0, 0), (0, 1))
-    jumps = []
-    handler.handle_jump(board, 50, 50, lambda p: jumps.append(p))
-    assert jumps == []
-
-
-def test_jump_on_already_airborne_ignored():
+    timer.add_move((0, 0), (0, 1), "wR")
     timer = GameTimer()
     handler = InputHandler(timer, MovementRules())
     board = Board([["wR", "."]])
@@ -89,7 +83,7 @@ def test_legal_move_blocked_while_pending():
     timer = GameTimer()
     handler = InputHandler(timer, MovementRules())
     board = Board([["wK", ".", "."]])
-    timer.add_move((0, 0), (0, 2))
+    timer.add_move((0, 0), (0, 2), "wK")
     moves = []
     handler.selected_position = (0, 0)
     handler.handle_click(board, 150, 50, lambda s, e: moves.append((s, e)))

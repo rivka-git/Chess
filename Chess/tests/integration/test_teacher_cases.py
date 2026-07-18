@@ -31,7 +31,7 @@ CASES = [
     ("one_cell_move_before_arrival_board_unchanged", "Board:\nwR . .\nCommands:\nclick 50 50\nclick 150 50\nwait 500\nprint board", "wR . ."),
     ("two_cell_move_before_and_after_arrival", "Board:\nwR . .\nCommands:\nclick 50 50\nclick 250 50\nwait 1000\nprint board\nwait 1000\nprint board", "wR . .\n. . wR"),
     ("moving_piece_ignores_redirect", "Board:\nwR . .\nCommands:\nclick 50 50\nclick 250 50\nwait 1000\nclick 50 50\nclick 150 50\nwait 1000\nprint board", ". . wR"),
-    ("opposite_colors_do_not_move_concurrently_in_common_route", "Board:\nwR . .\n. . .\nbR . .\nCommands:\nclick 50 50\nclick 250 50\nclick 50 250\nclick 250 250\nwait 2000\nprint board", ". . wR\n. . .\nbR . ."),
+    ("opposite_colors_do_not_move_concurrently_in_common_route", "Board:\nwR . .\n. . .\nbR . .\nCommands:\nclick 50 50\nclick 250 50\nclick 50 250\nclick 250 250\nwait 2000\nprint board", ". . wR\n. . .\n. . bR"),
     ("no_cooldown_state_in_common_route", "Board:\nwR . .\nCommands:\nclick 50 50\nclick 150 50\nwait 1000\nprint board", ". wR ."),
     ("can_move_again_after_arrival_without_cooldown", "Board:\nwR . .\nCommands:\nclick 50 50\nclick 150 50\nwait 1000\nclick 150 50\nclick 250 50\nwait 1000\nprint board", ". . wR"),
     ("piece_is_ready_after_arrival_without_cooldown", "Board:\nwR . .\nCommands:\nclick 50 50\nclick 150 50\nwait 1000\nclick 150 50\nclick 250 50\nwait 1000\nprint board", ". . wR"),

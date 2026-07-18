@@ -10,14 +10,13 @@ class GameTimer:
 
     def __init__(self) -> None:
         self.time_ms = 0
-        self.pending_moves: list[tuple[tuple[int, int], tuple[int, int], int]] = []
+        self.pending_moves: list[tuple[tuple[int, int], tuple[int, int], int, str, int]] = []
         self.airborne: list[tuple[tuple[int, int], int]] = []
 
-    def add_move(self, start: tuple[int, int], end: tuple[int, int]) -> None:
+    def add_move(self, start: tuple[int, int], end: tuple[int, int], token: str) -> None:
         distance = max(abs(end[0] - start[0]), abs(end[1] - start[1]))
-        # Distance-based duration so longer moves take proportionally more time
         arrival_time = self.time_ms + TRANSIT_DURATION_MS * distance
-        self.pending_moves.append((start, end, arrival_time))
+        self.pending_moves.append((start, end, arrival_time, token, self.time_ms))
 
     def add_airborne(self, position: tuple[int, int]) -> None:
         land_time = self.time_ms + TRANSIT_DURATION_MS
@@ -26,11 +25,11 @@ class GameTimer:
     def update(self, milliseconds: int) -> None:
         self.time_ms += milliseconds
 
-    def get_arrived_moves(self) -> list[tuple[tuple[int, int], tuple[int, int], int]]:
+    def get_arrived_moves(self) -> list:
         arrived = []
         remaining = []
         for move in self.pending_moves:
-            start, end, arrival_time = move
+            start, end, arrival_time, token, start_time = move
             if self.time_ms >= arrival_time:
                 arrived.append(move)
             else:
@@ -45,7 +44,7 @@ class GameTimer:
         self.airborne = [(pos, land_time) for pos, land_time in self.airborne if self.time_ms < land_time]
 
     def is_piece_in_transit(self, position: tuple[int, int]) -> bool:
-        return any(start == position for start, end, arrival_time in self.pending_moves)
+        return any(start == position for start, end, arrival_time, token, start_time in self.pending_moves)
 
     def has_pending_moves(self) -> bool:
         return bool(self.pending_moves)

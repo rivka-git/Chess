@@ -46,17 +46,15 @@ class GameEngine:
         return cls(rows=[list(row) for row in board.rows])
 
     def click(self, x: int, y: int) -> None:
-        # Ensures board is up to date before processing input (relevant for real-time play)
         self._apply_arrived_moves()
         if self.game_over:
             return
         self.input_handler.handle_click(self.board, x, y, self._on_move_requested)
 
     def _on_move_requested(self, start: tuple[int, int], end: tuple[int, int]) -> None:
-        self.game_timer.add_move(start, end)
+        self.game_timer.add_move(start, end, self.board.rows[start[0]][start[1]])
 
     def jump(self, x: int, y: int) -> None:
-        # Ensures board is up to date before processing input (relevant for real-time play)
         self._apply_arrived_moves()
         if self.game_over:
             return
@@ -74,9 +72,24 @@ class GameEngine:
         arrived_moves = self.game_timer.get_arrived_moves()
         airborne_positions = self.game_timer.get_airborne_positions()
 
-        for move in arrived_moves:
+        # Keep only the earliest-arriving move per destination
+        seen_ends: set[tuple[int, int]] = set()
+        filtered: list = []
+        for move in sorted(arrived_moves, key=lambda m: (m[4], arrived_moves.index(m))):
+            if move[1] not in seen_ends:
+                seen_ends.add(move[1])
+                filtered.append(move)
+
+        for move in filtered:
             if self.game_over:
                 break
+            start, end, arrival_time, token, start_time = move
+            # Cancel moves whose start is the destination of this move (head-on collision)
+            self.game_timer.pending_moves = [
+                m for m in self.game_timer.pending_moves if m[1] != end and m[0] != end
+            ]
+            # Also cancel from filtered (already-arrived moves)
+            filtered = [m for m in filtered if m[0] != end]
             kings_before = self.board.count_kings()
             executed = self.collision_resolver.resolve_collisions(
                 self.board, [move], airborne_positions, self.move_executor

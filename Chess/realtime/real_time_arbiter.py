@@ -18,13 +18,14 @@ class CollisionResolver:
     ) -> list[tuple[tuple[int, int], tuple[int, int]]]:
         moves_executed = []
 
-        for start, end, arrival_time in arrived_moves:
+        for start, end, arrival_time, token, *_ in arrived_moves:
+            if board.rows[start[0]][start[1]] != token:
+                continue
             if end not in airborne_positions:
                 self._capture_piece(board, end)
                 move_executor.apply_move(board, start, end)
                 moves_executed.append((start, end))
             else:
-                # If destination is occupied by an airborne piece, the moving piece is captured instead
                 self._capture_piece(board, start)
 
         return moves_executed
