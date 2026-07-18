@@ -83,21 +83,30 @@ class Pawn(Piece):
         col_delta = end_col - start_col
         abs_col = abs(col_delta)
         direction = -1 if self.color == "w" else 1
-        start_rank = board.height - 1 if self.color == "w" else 0
         target = board.rows[end_row][end_col]
 
         if col_delta == 0 and row_delta == direction:
             return target == "."
-        if col_delta == 0 and row_delta == 2 * direction and start_row == start_rank:
+        if col_delta == 0 and row_delta == 2 * direction and self._at_start_rank(board, start_row, start_col):
             mid = board.rows[start_row + direction][start_col]
             return target == "." and mid == "."
         if abs_col == 1 and row_delta == direction:
             return target != "." and target[0] != self.color
         return False
 
+    def _at_start_rank(self, board: object, row: int, col: int) -> bool:
+        """A pawn is still at its starting rank if the square behind it is
+        off the board (no back rank) or occupied by one of its own pieces
+        (a back rank), as opposed to open squares it has already advanced past.
+        """
+        direction = -1 if self.color == "w" else 1
+        behind_row = row - direction
+        if behind_row < 0 or behind_row >= board.height:
+            return True
+        return board.rows[behind_row][col][:1] == self.color
+
     def on_reach_end(self, board: object, position: tuple[int, int]) -> None:
         row, col = position
-        # Promote to queen upon reaching the opposite end of the board
         if self.color == "w" and row == 0:
             board.rows[row][col] = "wQ"
         elif self.color == "b" and row == board.height - 1:
