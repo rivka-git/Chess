@@ -10,6 +10,7 @@ class Renderer:
         self._asset_loader = asset_loader
         self._window = window
         self._anim_mgr = animation_manager
+        self._cell_size = cell_size
         import cv2
         board = asset_loader.board_img
         if board.img.shape[2] == 3:
@@ -26,6 +27,7 @@ class Renderer:
         self._sync_animation(snapshot, dt)
         self._reset_canvas()
         self._draw_pieces()
+        self._draw_move_hints(snapshot)
         self._draw_hud(snapshot)
         self._present()
 
@@ -57,6 +59,30 @@ class Renderer:
         if snapshot.game_over:
             h, w = canvas.img.shape[:2]
             canvas.put_text("GAME OVER", w // 4, h // 2, 2.0, color=(0, 0, 255, 255), thickness=3)
+
+    def _draw_move_hints(self, snapshot) -> None:
+        import cv2
+
+        selected = snapshot.selected_position
+        if selected is not None:
+            row, col = selected
+            x1 = col * self._cell_size
+            y1 = row * self._cell_size
+            x2 = x1 + self._cell_size - 1
+            y2 = y1 + self._cell_size - 1
+            cv2.rectangle(self._canvas.img, (x1, y1), (x2, y2), (30, 180, 255, 255), 3)
+
+        for row, col in snapshot.legal_targets:
+            cx = col * self._cell_size + self._cell_size // 2
+            cy = row * self._cell_size + self._cell_size // 2
+            if snapshot.board[row][col] is None:
+                # Chess-style hint for empty destination: centered dot.
+                radius = max(8, self._cell_size // 7)
+                cv2.circle(self._canvas.img, (cx, cy), radius, (70, 70, 70, 255), -1)
+            else:
+                # Chess-style hint for capture destination: target ring.
+                radius = max(12, self._cell_size // 2 - 8)
+                cv2.circle(self._canvas.img, (cx, cy), radius, (30, 30, 200, 255), 4)
 
     def _present(self) -> None:
         self._window.show(self._canvas)
