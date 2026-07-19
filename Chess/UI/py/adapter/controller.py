@@ -44,11 +44,11 @@ class Controller:
     def __init__(self, engine: GameEngine) -> None:
         self._engine = engine
 
-    def move(self, x: int, y: int) -> None:
-        self._engine.click(x, y)
+    def move(self, x: int, y: int, color: str | None = None) -> None:
+        self._engine.click(x, y, color=color)
 
-    def jump(self, x: int, y: int) -> None:
-        self._engine.jump(x, y)
+    def jump(self, x: int, y: int, color: str | None = None) -> None:
+        self._engine.jump(x, y, color=color)
 
     def click(self, x: int, y: int) -> None:
         # Backward-compatible alias for old input naming.
@@ -57,9 +57,9 @@ class Controller:
     def update(self, dt_ms: float) -> None:
         self._engine.wait(int(dt_ms))
 
-    def get_snapshot(self) -> GameSnapshot:
+    def get_snapshot(self, viewer_color: str | None = None) -> GameSnapshot:
         engine = self._engine
-        selected_position = engine.input_handler.selected_position
+        selected_position = engine.input_handler.selection_for(viewer_color)
         return GameSnapshot(
             clock=float(engine.time_ms),
             board=self._build_board_snapshot(),
