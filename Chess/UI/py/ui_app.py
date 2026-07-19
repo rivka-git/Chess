@@ -5,6 +5,13 @@ import pathlib
 import sys
 from typing import Callable, Protocol
 
+# Ensure Chess root and UI/py are importable when running this file directly.
+_ROOT = pathlib.Path(__file__).parent.parent.parent
+_UI_PY = pathlib.Path(__file__).parent
+for _path in (_ROOT, _UI_PY):
+    if str(_path) not in sys.path:
+        sys.path.insert(0, str(_path))
+
 from ioutils.board_parser import BoardParser
 from model.board import Board
 
@@ -12,7 +19,7 @@ from model.board import Board
 class ControllerLike(Protocol):
     def update(self, dt_ms: float) -> None: ...
     def get_snapshot(self): ...
-    def click(self, x: int, y: int) -> None: ...
+    def move(self, x: int, y: int) -> None: ...
     def jump(self, x: int, y: int) -> None: ...
 
 
@@ -75,17 +82,7 @@ class UIApp:
         runner = self._runner_factory(controller, self._window, renderer)
         runner.start_loop()
 
-
-def _prepare_paths() -> None:
-    root = pathlib.Path(__file__).parent.parent.parent
-    ui_py = pathlib.Path(__file__).parent
-    for path in (root, ui_py):
-        if str(path) not in sys.path:
-            sys.path.insert(0, str(path))
-
-
 if __name__ == "__main__":
-    _prepare_paths()
     from ui_bootstrap import build_default_ui_app
 
     build_default_ui_app().run()

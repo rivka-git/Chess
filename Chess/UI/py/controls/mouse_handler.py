@@ -10,6 +10,6 @@ class MouseHandler:
 
     def _on_mouse(self, event: int, x: int, y: int, flags: int, param) -> None:
         if event == cv2.EVENT_LBUTTONDOWN:
-            self._controller.click(x, y)
+            self._controller.move(x, y)
         elif event == cv2.EVENT_RBUTTONDOWN:
             self._controller.jump(x, y)

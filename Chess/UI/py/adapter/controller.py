@@ -41,11 +41,15 @@ class Controller:
         # Track when each move was queued so we can expose start_clock
         self._move_start_clocks: dict[tuple, float] = {}
 
-    def click(self, x: int, y: int) -> None:
+    def move(self, x: int, y: int) -> None:
         self._engine.click(x, y)
 
     def jump(self, x: int, y: int) -> None:
         self._engine.jump(x, y)
+
+    def click(self, x: int, y: int) -> None:
+        # Backward-compatible alias for old input naming.
+        self.move(x, y)
 
     def update(self, dt_ms: float) -> None:
         self._engine.wait(int(dt_ms))
