@@ -245,3 +245,39 @@ def test_mid_path_collision_stops_both_before_meeting_point() -> None:
     engine.click(50, 50)
     engine.wait(4000)
     assert engine.board.rows[0] == [".", "wR", ".", "bR", "."]
+
+
+def test_same_destination_collision_ui_timing() -> None:
+    """Moves registered 16 ms apart (one UI frame) must still collide."""
+    engine = GameEngine([["wR", ".", "bR"]])
+    engine.click(50, 50)
+    engine.click(150, 50)
+    engine.wait(16)          # simulate one UI frame between the two clicks
+    engine.click(250, 50)
+    engine.click(150, 50)
+    engine.wait(1000)
+    assert engine.board.rows[0] == ["wR", ".", "bR"]
+
+
+def test_same_destination_collision_ui_timing_32ms() -> None:
+    """Moves registered 32 ms apart must still collide."""
+    engine = GameEngine([["wR", ".", "bR"]])
+    engine.click(50, 50)
+    engine.click(150, 50)
+    engine.wait(32)
+    engine.click(250, 50)
+    engine.click(150, 50)
+    engine.wait(1000)
+    assert engine.board.rows[0] == ["wR", ".", "bR"]
+
+
+def test_no_false_collision_when_piece_already_at_rest() -> None:
+    """bR captures wR normally when wR already arrived (not in transit) — no false collision."""
+    engine = GameEngine([["wR", ".", "bR"]])
+    engine.click(50, 50)
+    engine.click(150, 50)   # wR → (0,1), arrives at T=1000
+    engine.wait(2000)       # T=2000 — wR long at rest, bR now starts moving
+    engine.click(250, 50)
+    engine.click(150, 50)   # bR captures wR (valid independent capture, no collision)
+    engine.wait(1001)
+    assert engine.board.rows[0][1] == "bR"
