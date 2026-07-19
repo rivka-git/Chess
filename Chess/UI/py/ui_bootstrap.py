@@ -4,6 +4,7 @@ from __future__ import annotations
 import pathlib
 
 from adapter.controller import Controller
+from adapter.sound_event_detector import SoundEventDetector
 from animation.animation_manager import AnimationManager
 from audio.sound_effects import SoundEffects
 from assets.asset_loader import AssetLoader
@@ -25,7 +26,11 @@ def build_default_ui_app() -> UIApp:
     return UIApp(
         board_parser=TextBoardParser(),
         engine_factory=GameEngine.from_board,
-        controller_factory=lambda engine: Controller(engine, sound_effects=sound_effects),
+        controller_factory=lambda engine: SoundEventDetector(
+            Controller(engine),
+            sound_effects,
+            CELL_SIZE_PX,
+        ),
         asset_loader=AssetLoader(),
         geometry=BoardGeometry(CELL_SIZE_PX),
         animation_manager_factory=AnimationManager,

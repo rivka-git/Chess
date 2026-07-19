@@ -1,52 +1,38 @@
 from __future__ import annotations
 from assets.img import Img
 from assets.asset_loader import AssetLoader
-from animation.animation_manager import AnimationManager
 from controls.window import Window
 
 
 class Renderer:
-    def __init__(self, asset_loader: AssetLoader, window: Window, cell_size: int, animation_manager: AnimationManager):
+    def __init__(self, asset_loader: AssetLoader, window: Window, cell_size: int):
         self._asset_loader = asset_loader
         self._window = window
-        self._anim_mgr = animation_manager
         self._cell_size = cell_size
         import cv2
         board = asset_loader.board_img
         if board.img.shape[2] == 3:
             board.img = cv2.cvtColor(board.img, cv2.COLOR_BGR2BGRA)
-        # Keep board pixel dimensions aligned to the logical 8x8 grid.
         board_px = cell_size * 8
         board.img = cv2.resize(board.img, (board_px, board_px), interpolation=cv2.INTER_AREA)
-        # Reuse a pre-allocated canvas to avoid per-frame allocations.
         self._board_base = board.img.copy()
         self._canvas = Img()
         self._canvas.img = self._board_base.copy()
 
-    def render(self, snapshot, dt: float) -> None:
-        self._sync_animation(snapshot, dt)
+    def render(self, snapshot, pieces: list) -> None:
         self._reset_canvas()
-        self._draw_pieces()
+        self._draw_pieces(pieces)
         self._draw_move_hints(snapshot)
         self._draw_hud(snapshot)
         self._present()
 
-    def _sync_animation(self, snapshot, dt: float) -> None:
-        self._anim_mgr.sync_pieces(snapshot)
-        self._anim_mgr.update(dt, snapshot)
-
     def _reset_canvas(self) -> None:
         import numpy as np
-
         np.copyto(self._canvas.img, self._board_base)
 
-    def _draw_pieces(self) -> None:
-        # Draw moving/jumping pieces last so they stay visible over destination occupants.
+    def _draw_pieces(self, pieces: list) -> None:
         in_transit = {"move", "jump"}
-        pieces_in_z_order = sorted(
-            self._anim_mgr.pieces, key=lambda pv: pv.state_name in in_transit
-        )
-        for pv in pieces_in_z_order:
+        for pv in sorted(pieces, key=lambda pv: pv.state_name in in_transit):
             sprite = pv.get_sprite()
             try:
                 sprite.draw_on(self._canvas, pv.px, pv.py)
@@ -76,11 +62,9 @@ class Renderer:
             cx = col * self._cell_size + self._cell_size // 2
             cy = row * self._cell_size + self._cell_size // 2
             if snapshot.board[row][col] is None:
-                # Chess-style hint for empty destination: centered dot.
                 radius = max(8, self._cell_size // 7)
                 cv2.circle(self._canvas.img, (cx, cy), radius, (70, 70, 70, 255), -1)
             else:
-                # Chess-style hint for capture destination: target ring.
                 radius = max(12, self._cell_size // 2 - 8)
                 cv2.circle(self._canvas.img, (cx, cy), radius, (30, 30, 200, 255), 4)
 

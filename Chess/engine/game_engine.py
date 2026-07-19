@@ -7,7 +7,9 @@ from rules.rule_engine import MovementRules, MoveExecutor
 from realtime.motion import GameTimer
 from realtime.real_time_arbiter import CollisionResolver
 from realtime.in_transit_collision_resolver import InTransitCollisionResolver
+from realtime.move_arbiter import MoveArbiter
 from input.input_handler import InputHandler
+from rules.post_move_effects import PostMoveEffects
 
 
 class GameEndDetector:
@@ -30,6 +32,9 @@ class GameEngine:
         collision_resolver: CollisionResolver | None = None,
         game_end_detector: GameEndDetector | None = None,
         in_transit_collision_resolver: InTransitCollisionResolver | None = None,
+        move_arbiter: MoveArbiter | None = None,
+        input_handler: InputHandler | None = None,
+        post_move_effects: PostMoveEffects | None = None,
     ) -> None:
         self.board = Board(rows or [["."]]) 
         self.movement_rules = movement_rules or MovementRules()
@@ -38,7 +43,9 @@ class GameEngine:
         self.collision_resolver = collision_resolver or CollisionResolver()
         self.game_end_detector = game_end_detector or GameEndDetector()
         self.in_transit_collision_resolver = in_transit_collision_resolver or InTransitCollisionResolver()
-        self.input_handler = InputHandler(self.game_timer, self.movement_rules)
+        self.move_arbiter = move_arbiter or MoveArbiter()
+        self.input_handler = input_handler or InputHandler(self.game_timer, self.movement_rules)
+        self.post_move_effects = post_move_effects or PostMoveEffects()
 
         self.time_ms = 0
         self.game_over = False
@@ -79,30 +86,22 @@ class GameEngine:
         arrived_moves = self.game_timer.get_arrived_moves()
         airborne_positions = self.game_timer.get_airborne_positions()
 
-        # Keep only the earliest-arriving move per destination
-        seen_ends: set[tuple[int, int]] = set()
-        filtered: list = []
-        for move in sorted(arrived_moves, key=lambda m: (m[4], arrived_moves.index(m))):
-            if move[1] not in seen_ends:
-                seen_ends.add(move[1])
-                filtered.append(move)
+        filtered = self.move_arbiter.filter_arrived(arrived_moves)
 
         for move in filtered:
             if self.game_over:
                 break
             start, end, arrival_time, token, start_time = move
-            # Cancel moves whose start is the destination of this move (head-on collision)
-            self.game_timer.pending_moves = [
-                m for m in self.game_timer.pending_moves if m[1] != end and m[0] != end
-            ]
-            # Also cancel from filtered (already-arrived moves)
+            self.game_timer.pending_moves = self.move_arbiter.cancel_head_on(
+                self.game_timer.pending_moves, end
+            )
             filtered = [m for m in filtered if m[0] != end]
             kings_before = self.board.count_kings()
             executed = self.collision_resolver.resolve_collisions(
                 self.board, [move], airborne_positions, self.move_executor
             )
             for start, end in executed:
-                self.movement_rules.apply_end_of_move(self.board, end)
+                self.post_move_effects.apply(self.board, end)
                 kings_after = self.board.count_kings()
                 if kings_after < kings_before:
                     self.game_over = True

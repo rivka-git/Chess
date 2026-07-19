@@ -66,10 +66,5 @@ class MovementRules:
         return piece_a != "." and piece_b != "." and piece_a[0] == piece_b[0]
 
     def apply_end_of_move(self, board: Board, end: tuple[int, int]) -> None:
-        end_row, end_col = end
-        token = board.get_piece(end_row, end_col)
-        if token == ".":
-            return
-        piece = self._registry.rules.get(token[1])
-        if piece is not None:
-            piece(token[0]).on_reach_end(board, end)
+        from rules.post_move_effects import PostMoveEffects
+        PostMoveEffects(self._registry).apply(board, end)

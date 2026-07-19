@@ -49,8 +49,8 @@ class UIApp:
         animation_manager_factory: Callable[[AssetLoaderLike, object], object],
         window: WindowLike,
         mouse_handler_factory: Callable[[WindowLike, ControllerLike], object],
-        renderer_factory: Callable[[AssetLoaderLike, WindowLike, int, object], object],
-        runner_factory: Callable[[ControllerLike, WindowLike, object], RunnerLike],
+        renderer_factory: Callable[[AssetLoaderLike, WindowLike, int], object],
+        runner_factory: Callable[[ControllerLike, WindowLike, object, object], RunnerLike],
         cell_size_px: int,
         default_board_text: str,
     ) -> None:
@@ -77,9 +77,9 @@ class UIApp:
         animation_manager = self._animation_manager_factory(self._asset_loader, self._geometry)
         self._mouse_handler_factory(self._window, controller)
         renderer = self._renderer_factory(
-            self._asset_loader, self._window, self._cell_size_px, animation_manager
+            self._asset_loader, self._window, self._cell_size_px
         )
-        runner = self._runner_factory(controller, self._window, renderer)
+        runner = self._runner_factory(controller, self._window, renderer, animation_manager)
         runner.start_loop()
 
 if __name__ == "__main__":
