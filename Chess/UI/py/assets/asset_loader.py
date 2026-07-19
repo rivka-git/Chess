@@ -72,7 +72,7 @@ class AssetLoader:
                         img_obj.img = cv2.resize(img_obj.img, (cell_size, cell_size), interpolation=cv2.INTER_AREA)
                     frames.append(img_obj)
                 self._cache[key][state] = {"config": config, "frames": frames}
-
+  
     def get_state_data(self, piece_key: str, state_name: str) -> dict:
         """Return {"config": ..., "frames": [...]} for a piece/state."""
         return self._cache[piece_key][state_name]

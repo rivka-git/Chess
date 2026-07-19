@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Protocol
+from config import TRANSIT_DURATION_MS
 from engine.game_engine import GameEngine
 
 
@@ -87,51 +88,49 @@ class Controller:
 
     def get_snapshot(self) -> GameSnapshot:
         engine = self._engine
-        clock = float(engine.time_ms)
-        board_snap: list[list[PieceSnapshot | None]] = []
-        for r in range(engine.board.height):
-            snap_row: list[PieceSnapshot | None] = []
-            for c in range(engine.board.width):
-                token = engine.board.rows[r][c]
-                if token == ".":
-                    snap_row.append(None)
-                else:
-                    snap_row.append(PieceSnapshot(token=token, row=r, col=c, cooldown_until=0.0))
-            board_snap.append(snap_row)
-
-        pending = []
-        for start, end, arrival_time, _token, _start_time in engine.game_timer.pending_moves:
-            from config import TRANSIT_DURATION_MS
-            distance = max(abs(end[0] - start[0]), abs(end[1] - start[1]))
-            duration = TRANSIT_DURATION_MS * distance
-            start_clock = float(arrival_time - duration)
-            pending.append(PendingMoveSnapshot(
-                start=start, end=end,
-                start_clock=start_clock,
-                arrival_clock=float(arrival_time)
-            ))
-
-        jumps = []
-        for pos, land_time in engine.game_timer.airborne:
-            from config import TRANSIT_DURATION_MS
-            jumps.append(JumpSnapshot(
-                position=pos,
-                start_clock=float(land_time - TRANSIT_DURATION_MS),
-                land_clock=float(land_time)
-            ))
-
         selected_position = engine.input_handler.selected_position
-        legal_targets = self._compute_legal_targets(selected_position)
-
         return GameSnapshot(
-            clock=clock,
-            board=board_snap,
-            pending_moves=pending,
-            jumps=jumps,
+            clock=float(engine.time_ms),
+            board=self._build_board_snapshot(),
+            pending_moves=self._build_pending_moves_snapshot(),
+            jumps=self._build_jumps_snapshot(),
             selected_position=selected_position,
-            legal_targets=legal_targets,
+            legal_targets=self._compute_legal_targets(selected_position),
             game_over=engine.game_over,
         )
+
+    def _build_board_snapshot(self) -> list[list[PieceSnapshot | None]]:
+        board = self._engine.board
+        result: list[list[PieceSnapshot | None]] = []
+        for r in range(board.height):
+            row: list[PieceSnapshot | None] = []
+            for c in range(board.width):
+                token = board.rows[r][c]
+                row.append(None if token == "." else PieceSnapshot(token=token, row=r, col=c, cooldown_until=0.0))
+            result.append(row)
+        return result
+
+    def _build_pending_moves_snapshot(self) -> list[PendingMoveSnapshot]:
+        pending = []
+        for start, end, arrival_time, _token, _start_time in self._engine.game_timer.pending_moves:
+            distance = max(abs(end[0] - start[0]), abs(end[1] - start[1]))
+            pending.append(PendingMoveSnapshot(
+                start=start,
+                end=end,
+                start_clock=float(arrival_time - TRANSIT_DURATION_MS * distance),
+                arrival_clock=float(arrival_time),
+            ))
+        return pending
+
+    def _build_jumps_snapshot(self) -> list[JumpSnapshot]:
+        return [
+            JumpSnapshot(
+                position=pos,
+                start_clock=float(land_time - TRANSIT_DURATION_MS),
+                land_clock=float(land_time),
+            )
+            for pos, land_time in self._engine.game_timer.airborne
+        ]
 
     def _is_illegal_move_attempt(
         self,

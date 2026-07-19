@@ -6,6 +6,7 @@ from model.board import Board
 from rules.rule_engine import MovementRules, MoveExecutor
 from realtime.motion import GameTimer
 from realtime.real_time_arbiter import CollisionResolver
+from realtime.in_transit_collision_resolver import InTransitCollisionResolver
 from input.input_handler import InputHandler
 
 
@@ -28,6 +29,7 @@ class GameEngine:
         game_timer: GameTimer | None = None,
         collision_resolver: CollisionResolver | None = None,
         game_end_detector: GameEndDetector | None = None,
+        in_transit_collision_resolver: InTransitCollisionResolver | None = None,
     ) -> None:
         self.board = Board(rows or [["."]]) 
         self.movement_rules = movement_rules or MovementRules()
@@ -35,6 +37,7 @@ class GameEngine:
         self.game_timer = game_timer or GameTimer()
         self.collision_resolver = collision_resolver or CollisionResolver()
         self.game_end_detector = game_end_detector or GameEndDetector()
+        self.in_transit_collision_resolver = in_transit_collision_resolver or InTransitCollisionResolver()
         self.input_handler = InputHandler(self.game_timer, self.movement_rules)
 
         self.time_ms = 0
@@ -64,8 +67,12 @@ class GameEngine:
         self.game_timer.add_airborne(position)
 
     def wait(self, milliseconds: int) -> None:
+        previous_time_ms = self.game_timer.time_ms
         self.game_timer.update(milliseconds)
         self.time_ms = self.game_timer.time_ms
+        self.game_timer.pending_moves = self.in_transit_collision_resolver.resolve(
+            self.board, self.game_timer.pending_moves, self.move_executor, previous_time_ms, self.time_ms
+        )
         self._apply_arrived_moves()
 
     def _apply_arrived_moves(self) -> None:

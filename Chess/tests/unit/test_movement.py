@@ -215,3 +215,33 @@ def test_moving_piece_cannot_jump() -> None:
     engine.jump(50, 50)
     engine.wait(1000)
     assert engine.board.rows[0][1] == "wR"  # זז ליעד, לא קפץ
+
+
+def test_same_destination_collision_stops_both_at_last_legal_square() -> None:
+    engine = GameEngine([["wR", ".", "bR"]])
+    engine.click(50, 50)
+    engine.click(150, 50)
+    engine.click(250, 50)
+    engine.click(150, 50)
+    engine.wait(1000)
+    assert engine.board.rows[0] == ["wR", ".", "bR"]
+
+
+def test_same_color_same_destination_collision_also_stops_both() -> None:
+    engine = GameEngine([["wR", ".", "wQ"]])
+    engine.click(50, 50)
+    engine.click(150, 50)
+    engine.click(250, 50)
+    engine.click(150, 50)
+    engine.wait(1000)
+    assert engine.board.rows[0] == ["wR", ".", "wQ"]
+
+
+def test_mid_path_collision_stops_both_before_meeting_point() -> None:
+    engine = GameEngine([["wR", ".", ".", ".", "bR"]])
+    engine.click(50, 50)
+    engine.click(450, 50)
+    engine.click(450, 50)
+    engine.click(50, 50)
+    engine.wait(4000)
+    assert engine.board.rows[0] == [".", "wR", ".", "bR", "."]
