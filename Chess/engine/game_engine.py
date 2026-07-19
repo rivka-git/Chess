@@ -100,12 +100,10 @@ class GameEngine:
             executed = self.collision_resolver.resolve_collisions(
                 self.board, [move], airborne_positions, self.move_executor
             )
-            for start, end in executed:
-                self.post_move_effects.apply(self.board, end)
-                kings_after = self.board.count_kings()
-                if kings_after < kings_before:
-                    self.game_over = True
-                    break
+            for arrived_start, arrived_end in executed:
+                self.post_move_effects.apply(self.board, arrived_end)
+            if self.board.count_kings() < kings_before:
+                self.game_over = True
 
         self.game_timer.expire_airborne()
 

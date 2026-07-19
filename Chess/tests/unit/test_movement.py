@@ -156,6 +156,21 @@ def test_capturing_enemy_king_ends_game() -> None:
     assert engine.game_over is True
 
 
+def test_airborne_king_intercepts_moving_enemy_triggers_game_over() -> None:
+    """bK jumps (airborne at its own square) and intercepts wK arriving there — wK is captured, game over."""
+    engine = GameEngine([["wK", "bK"]])
+    # wK at (0,0) moves to (0,1) — straight into bK
+    engine.click(50, 50)
+    engine.click(150, 50)
+    # bK at (0,1) jumps — becomes airborne at (0,1)
+    engine.jump(150, 50)
+    # wK arrives at (0,1) but bK is airborne there → wK (the mover) is captured
+    engine.wait(1000)
+    assert engine.game_over is True
+    assert engine.board.rows[0][0] == "."   # wK removed from start
+    assert engine.board.rows[0][1] == "bK"  # bK still alive at Y
+
+
 def test_moves_ignored_after_game_over() -> None:
     engine = GameEngine([["wR", "bK", "."]])
     engine.click(50, 50)
