@@ -1,5 +1,4 @@
 from __future__ import annotations
-import copy
 from assets.img import Img
 from assets.asset_loader import AssetLoader
 from animation.animation_manager import AnimationManager
@@ -15,25 +14,32 @@ class Renderer:
         board = asset_loader.board_img
         if board.img.shape[2] == 3:
             board.img = cv2.cvtColor(board.img, cv2.COLOR_BGR2BGRA)
-        # Resize board to exact cell_size * 8 so pixel↔cell mapping is exact
+        # Keep board pixel dimensions aligned to the logical 8x8 grid.
         board_px = cell_size * 8
         board.img = cv2.resize(board.img, (board_px, board_px), interpolation=cv2.INTER_AREA)
-        # Pre-allocate canvas once
+        # Reuse a pre-allocated canvas to avoid per-frame allocations.
         self._board_base = board.img.copy()
         self._canvas = Img()
         self._canvas.img = self._board_base.copy()
 
     def render(self, snapshot, dt: float) -> None:
+        self._sync_animation(snapshot, dt)
+        self._reset_canvas()
+        self._draw_pieces()
+        self._draw_hud(snapshot)
+        self._present()
+
+    def _sync_animation(self, snapshot, dt: float) -> None:
         self._anim_mgr.sync_pieces(snapshot)
         self._anim_mgr.update(dt, snapshot)
 
-        # Reset canvas to board background
+    def _reset_canvas(self) -> None:
         import numpy as np
+
         np.copyto(self._canvas.img, self._board_base)
 
-        # Draw stationary pieces first, then in-transit ones on top, so an
-        # arriving piece is always visible over whatever already sits on
-        # its destination square instead of being hidden underneath it.
+    def _draw_pieces(self) -> None:
+        # Draw moving/jumping pieces last so they stay visible over destination occupants.
         in_transit = {"move", "jump"}
         pieces_in_z_order = sorted(
             self._anim_mgr.pieces, key=lambda pv: pv.state_name in in_transit
@@ -45,12 +51,12 @@ class Renderer:
             except ValueError:
                 pass
 
+    def _draw_hud(self, snapshot) -> None:
         canvas = self._canvas
-
-        # HUD: clock and game-over
         canvas.put_text(f"t={int(snapshot.clock)}ms", 4, 20, 0.5, color=(255, 255, 255, 255))
         if snapshot.game_over:
             h, w = canvas.img.shape[:2]
             canvas.put_text("GAME OVER", w // 4, h // 2, 2.0, color=(0, 0, 255, 255), thickness=3)
 
-        self._window.show(canvas)
+    def _present(self) -> None:
+        self._window.show(self._canvas)

@@ -1,57 +1,91 @@
-"""Entry point for the Kung-Fu Chess GUI application."""
+"""UI application orchestration with dependency injection."""
 from __future__ import annotations
-import sys
+
 import pathlib
+import sys
+from typing import Callable, Protocol
 
-# Allow imports from Chess root and UI/py
-_ROOT = pathlib.Path(__file__).parent.parent.parent   # Chess/
-_UI_PY = pathlib.Path(__file__).parent                # UI/py/
-for p in (_ROOT, _UI_PY):
-    if str(p) not in sys.path:
-        sys.path.insert(0, str(p))
+from ioutils.board_parser import BoardParser
+from model.board import Board
 
-from assets.asset_loader import AssetLoader
-from adapter.controller import Controller
-from controls.window import Window
-from controls.mouse_handler import MouseHandler
-from render.renderer import Renderer
-from loop.ui_runner import UIRunner
-from animation.animation_manager import AnimationManager
-from geometry.board_geometry import BoardGeometry
-from engine.game_engine import GameEngine
-from ioutils.board_parser import TextBoardParser
-from config import CELL_SIZE_PX
 
-DEFAULT_BOARD = """Board:
-bR bN bB bQ bK bB bN bR
-bP bP bP bP bP bP bP bP
-.  .  .  .  .  .  .  .
-.  .  .  .  .  .  .  .
-.  .  .  .  .  .  .  .
-.  .  .  .  .  .  .  .
-wP wP wP wP wP wP wP wP
-wR wN wB wQ wK wB wN wR
-"""
+class ControllerLike(Protocol):
+    def update(self, dt_ms: float) -> None: ...
+    def get_snapshot(self): ...
+    def click(self, x: int, y: int) -> None: ...
+    def jump(self, x: int, y: int) -> None: ...
+
+
+class AssetLoaderLike(Protocol):
+    def load_all(self, cell_size: int) -> None: ...
+
+
+class WindowLike(Protocol):
+    def set_mouse_callback(self, callback) -> None: ...
+    def poll_events(self, wait_ms: int = 0) -> bool: ...
+    def show(self, canvas) -> None: ...
+    def destroy(self) -> None: ...
+
+
+class RunnerLike(Protocol):
+    def start_loop(self) -> None: ...
 
 
 class UIApp:
-    def run(self, board_text: str = DEFAULT_BOARD) -> None:
-        board = TextBoardParser().parse(board_text)
-        engine = GameEngine.from_board(board)
-        controller = Controller(engine)
+    def __init__(
+        self,
+        board_parser: BoardParser,
+        engine_factory: Callable[[Board], object],
+        controller_factory: Callable[[object], ControllerLike],
+        asset_loader: AssetLoaderLike,
+        geometry: object,
+        animation_manager_factory: Callable[[AssetLoaderLike, object], object],
+        window: WindowLike,
+        mouse_handler_factory: Callable[[WindowLike, ControllerLike], object],
+        renderer_factory: Callable[[AssetLoaderLike, WindowLike, int, object], object],
+        runner_factory: Callable[[ControllerLike, WindowLike, object], RunnerLike],
+        cell_size_px: int,
+        default_board_text: str,
+    ) -> None:
+        self._board_parser = board_parser
+        self._engine_factory = engine_factory
+        self._controller_factory = controller_factory
+        self._asset_loader = asset_loader
+        self._geometry = geometry
+        self._animation_manager_factory = animation_manager_factory
+        self._window = window
+        self._mouse_handler_factory = mouse_handler_factory
+        self._renderer_factory = renderer_factory
+        self._runner_factory = runner_factory
+        self._cell_size_px = cell_size_px
+        self._default_board_text = default_board_text
 
-        loader = AssetLoader()
-        loader.load_all(CELL_SIZE_PX)
+    def run(self, board_text: str | None = None) -> None:
+        resolved_board_text = board_text if board_text is not None else self._default_board_text
+        board = self._board_parser.parse(resolved_board_text)
+        engine = self._engine_factory(board)
+        controller = self._controller_factory(engine)
 
-        geometry = BoardGeometry(CELL_SIZE_PX)
-        animation_manager = AnimationManager(loader, geometry)
-
-        window = Window()
-        MouseHandler(window, controller)
-        renderer = Renderer(loader, window, CELL_SIZE_PX, animation_manager)
-        runner = UIRunner(controller, window, renderer)
+        self._asset_loader.load_all(self._cell_size_px)
+        animation_manager = self._animation_manager_factory(self._asset_loader, self._geometry)
+        self._mouse_handler_factory(self._window, controller)
+        renderer = self._renderer_factory(
+            self._asset_loader, self._window, self._cell_size_px, animation_manager
+        )
+        runner = self._runner_factory(controller, self._window, renderer)
         runner.start_loop()
 
 
+def _prepare_paths() -> None:
+    root = pathlib.Path(__file__).parent.parent.parent
+    ui_py = pathlib.Path(__file__).parent
+    for path in (root, ui_py):
+        if str(path) not in sys.path:
+            sys.path.insert(0, str(path))
+
+
 if __name__ == "__main__":
-    UIApp().run()
+    _prepare_paths()
+    from ui_bootstrap import build_default_ui_app
+
+    build_default_ui_app().run()
