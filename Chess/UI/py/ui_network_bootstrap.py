@@ -23,7 +23,7 @@ from network.remote_controller import RemoteController
 from network.ws_client import WsClient
 from render.renderer import Renderer
 from ui_app import UIApp
-from ui_config import DEFAULT_BOARD_TEXT
+from netcommon.defaults import DEFAULT_BOARD_TEXT
 
 
 def build_networked_ui_app(server_uri: str) -> UIApp:

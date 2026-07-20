@@ -1,5 +1,8 @@
 """Server-wide configuration constants."""
 
-HOST = "localhost"
-PORT = 8765
-TICK_MS = 50  # 20Hz authoritative tick, well under TRANSIT_DURATION_MS
+# 🇮🇱 הסבר: קובץ זה מכיל את הגדרות התצורה של השרת.
+# כל הערכים הקריטיים שקובעים איך השרת פועל מרוכזים כאן.
+
+HOST = "localhost"   # כתובת השרת — "localhost" = רץ על אותה מחשב (לפיתוח מקומי). בשרת אמיתי יהיה כאן כתובת IP ציבורית.
+PORT = 8765          # פורט ה-WebSocket — הלקוח והשרת "מדברים" דרך פורט זה
+TICK_MS = 50         # כל 50 מילישניות (= 20 פעמים בשנייה) השרת מעדכן את מצב המשחק ושולח אותו ללקוחות

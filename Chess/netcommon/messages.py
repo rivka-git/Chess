@@ -50,7 +50,7 @@ def snapshot_to_wire(snapshot: Any) -> dict[str, Any]:
 
 
 def wire_to_snapshot(data: dict[str, Any]):
-    from adapter.controller import GameSnapshot, JumpSnapshot, PendingMoveSnapshot, PieceSnapshot
+    from engine.controller import GameSnapshot, JumpSnapshot, PendingMoveSnapshot, PieceSnapshot
 
     board = [
         [None if cell is None else PieceSnapshot(**cell) for cell in row]
