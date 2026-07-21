@@ -31,3 +31,6 @@ class GameRepository:
             "ORDER BY started_at",
             (username, username),
         ).fetchall()
+
+    def get_all_games(self) -> list[sqlite3.Row]:
+        return self._conn.execute("SELECT * FROM games ORDER BY started_at").fetchall()

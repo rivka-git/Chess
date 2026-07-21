@@ -93,6 +93,17 @@ def test_get_games_for_player_matches_white_or_black(conn):
     assert {g["room_id"] for g in games} == {"room-1", "room-2"}
 
 
+def test_get_all_games_returns_every_game(conn):
+    repo = GameRepository(conn)
+    repo.create_game("room-1", "alice", "bob", "t1")
+    repo.create_game("room-2", "carol", "dave", "t2")
+    assert {g["room_id"] for g in repo.get_all_games()} == {"room-1", "room-2"}
+
+
+def test_get_all_games_on_empty_db_is_empty(conn):
+    assert GameRepository(conn).get_all_games() == []
+
+
 # --- MoveRepository ---
 
 def test_add_move_and_get_moves_for_game_orders_by_seq(conn):
