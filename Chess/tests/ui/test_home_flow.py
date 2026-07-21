@@ -30,6 +30,7 @@ class FakeFrontend:
         self.logged_in = None
         self.room_created = None
         self.searched = False
+        self.shown_history = None
 
     def get_credentials(self):
         return self._credentials.pop(0)
@@ -48,6 +49,9 @@ class FakeFrontend:
 
     def on_room_created(self, room_id):
         self.room_created = room_id
+
+    def show_history(self, games):
+        self.shown_history = games
 
     def show_error(self, message):
         self.errors.append(message)
@@ -132,6 +136,22 @@ def test_room_join_unknown_id_shows_error_then_quit():
 
     assert run_home_flow(gate, frontend) is False
     assert any("room" in e.lower() for e in frontend.errors)
+
+
+def test_history_action_fetches_games_then_stays_on_home():
+    gate = FakeGate([
+        {"type": "login_ok", "rating": 1200},
+        {"type": "history", "games": [{"id": 1, "room_id": "r1"}]},
+        {"type": "role_assigned", "role": "white", "room_id": "r2"},
+        {"type": "state", "snapshot": {}},
+    ])
+    frontend = FakeFrontend(
+        credentials=[("alice", "pw")], actions=["history", "room"], room_action=("create", ""),
+    )
+
+    assert run_home_flow(gate, frontend) is True
+    assert frontend.shown_history == [{"id": 1, "room_id": "r1"}]
+    assert {"type": "get_history"} in gate.sent
 
 
 def test_room_join_success_returns_true():

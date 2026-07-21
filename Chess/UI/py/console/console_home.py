@@ -18,14 +18,16 @@ class ConsoleHomeFrontend:
 
     def choose_action(self) -> str:
         while True:
-            choice = input("1) Play  2) Room  (q to quit)\n> ").strip().lower()
+            choice = input("1) Play  2) Room  3) History  (q to quit)\n> ").strip().lower()
             if choice == "1":
                 return "play"
             if choice == "2":
                 return "room"
+            if choice == "3":
+                return "history"
             if choice == "q":
                 return "quit"
-            print("Please choose 1, 2, or q.")
+            print("Please choose 1, 2, 3, or q.")
 
     def on_searching(self) -> None:
         print("Searching for an opponent (up to 1 minute)...")
@@ -35,6 +37,20 @@ class ConsoleHomeFrontend:
 
     def on_room_created(self, room_id: str) -> None:
         print(f"Room created: {room_id} -- share this id with the other player.")
+
+    def show_history(self, games: list[dict]) -> None:
+        if not games:
+            print("No games recorded yet.")
+            return
+        print(f"--- Your games ({len(games)}) ---")
+        for game in games:
+            winner = game["winner"] or "-"
+            ended = game["ended_at"] or "in progress"
+            print(
+                f"#{game['id']}  {game['white']} (white) vs {game['black']} (black)"
+                f"  | winner={winner} reason={game['reason'] or '-'}"
+                f"  | {game['started_at']} -> {ended}"
+            )
 
     def show_error(self, message: str) -> None:
         print(message)

@@ -79,12 +79,13 @@ def build_dispatcher(db_path: str = DB_PATH) -> tuple[Dispatcher, MatchmakerServ
     session_manager = SessionManager(event_bus)
     db_conn = connect(db_path)
     player_repository = PlayerRepository(db_conn)
+    game_repository = GameRepository(db_conn)
     auth_service = AuthService(player_repository, PasswordHasher())
     RatingService(player_repository, event_bus)  # מעדכן ELO אוטומטית בסיום כל משחק
-    GameHistoryRecorder(GameRepository(db_conn), MoveRepository(db_conn), event_bus)  # שומר היסטוריית משחקים/מהלכים
+    GameHistoryRecorder(game_repository, MoveRepository(db_conn), event_bus)  # שומר היסטוריית משחקים/מהלכים
     matchmaker = MatchmakerService(MatchmakingQueue(), session_manager, event_bus)
     room_service = RoomService(session_manager)
-    dispatcher = Dispatcher(session_manager, auth_service, matchmaker, room_service, event_bus)
+    dispatcher = Dispatcher(session_manager, auth_service, matchmaker, room_service, event_bus, game_repository)
     return dispatcher, matchmaker
 
 

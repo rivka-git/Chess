@@ -18,10 +18,24 @@ from server.game.seating import seat_and_notify
 from server.game.session_manager import SessionManager
 from server.matchmaking.matchmaker_service import MatchmakerService
 from server.net.connection import ClientConnection
+from server.persistence.game_repository import GameRepository
 from server.rooms.exceptions import RoomNotFoundError
 from server.rooms.room_service import RoomService
 
 logger = logging.getLogger("server.dispatch")
+
+
+def _game_to_dict(row) -> dict:
+    return {
+        "id": row["id"],
+        "room_id": row["room_id"],
+        "white": row["white_username"],
+        "black": row["black_username"],
+        "winner": row["winner"],
+        "reason": row["reason"],
+        "started_at": row["started_at"],
+        "ended_at": row["ended_at"],
+    }
 
 
 class Dispatcher:
@@ -32,12 +46,14 @@ class Dispatcher:
         matchmaker: MatchmakerService,
         room_service: RoomService,
         event_bus: EventBus,
+        game_repository: GameRepository,
     ) -> None:
         self._sessions = session_manager
         self._auth = auth_service
         self._matchmaker = matchmaker
         self._rooms = room_service
         self._event_bus = event_bus
+        self._games = game_repository
 
     async def on_connect(self, connection: ClientConnection) -> None:
         # Nothing to do yet -- the connection must send a login message
@@ -122,10 +138,18 @@ class Dispatcher:
             await self._handle_create_room(connection)
         elif msg_type == "join_room":
             await self._handle_join_room(connection, message)
+        elif msg_type == "get_history":
+            await self._handle_get_history(connection)
         else:
             await connection.send_json({
                 "type": "error", "code": "unknown_type", "message": f"Unknown message type: {msg_type!r}",
             })
+
+    async def _handle_get_history(self, connection: ClientConnection) -> None:
+        rows = self._games.get_games_for_player(connection.username)
+        await connection.send_json({
+            "type": "history", "games": [_game_to_dict(row) for row in rows],
+        })
 
     async def _handle_create_room(self, connection: ClientConnection) -> None:
         room_id = self._rooms.create_room()

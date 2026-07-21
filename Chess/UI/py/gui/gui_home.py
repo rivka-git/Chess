@@ -49,5 +49,22 @@ class GuiHomeFrontend:
     def on_room_created(self, room_id: str) -> None:
         _popup("showinfo", "Room created", f"Room id: {room_id}\nShare it with the other player.")
 
+    def show_history(self, games: list[dict]) -> None:
+        root = tk.Tk()
+        root.title("My Games")
+        text = tk.Text(root, width=64, height=20)
+        text.pack(padx=10, pady=10)
+        if not games:
+            text.insert("end", "No games recorded yet.")
+        for game in games:
+            winner = game["winner"] or "-"
+            ended = game["ended_at"] or "in progress"
+            text.insert("end", f"#{game['id']}  {game['white']} (white) vs {game['black']} (black)\n")
+            text.insert("end", f"    winner: {winner}   reason: {game['reason'] or '-'}\n")
+            text.insert("end", f"    {game['started_at']} -> {ended}\n\n")
+        text.config(state="disabled")
+        tk.Button(root, text="Close", command=root.destroy).pack(pady=(0, 10))
+        root.mainloop()
+
     def show_error(self, message: str) -> None:
         _popup("showerror", "Kung-Fu Chess", message)

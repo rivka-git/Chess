@@ -14,10 +14,11 @@ from typing import Protocol
 class HomeFrontend(Protocol):
     def get_credentials(self) -> tuple[str, str] | None: ...
     def on_logged_in(self, username: str, rating: int) -> None: ...
-    def choose_action(self) -> str: ...  # "play" | "room" | "quit"
+    def choose_action(self) -> str: ...  # "play" | "room" | "history" | "quit"
     def on_searching(self) -> None: ...
     def get_room_action(self) -> tuple[str, str] | None: ...  # ("create","") | ("join", id) | None
     def on_room_created(self, room_id: str) -> None: ...
+    def show_history(self, games: list[dict]) -> None: ...
     def show_error(self, message: str) -> None: ...
 
 
@@ -57,6 +58,13 @@ def _home(gate: GateLike, frontend: HomeFrontend) -> bool:
         elif action == "room":
             if _room(gate, frontend):
                 return True
+        elif action == "history":
+            frontend.show_history(_fetch_history(gate))
+
+
+def _fetch_history(gate: GateLike) -> list[dict]:
+    gate.send({"type": "get_history"})
+    return gate.wait_for("history").get("games", [])
 
 
 def _play(gate: GateLike, frontend: HomeFrontend) -> bool:

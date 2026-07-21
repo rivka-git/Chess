@@ -32,6 +32,8 @@ from render.renderer import Renderer
 from ui_app import UIApp
 from netcommon.defaults import DEFAULT_BOARD_TEXT
 
+MOVE_LOG_PANEL_WIDTH_PX = 280
+
 
 def build_networked_ui_app(home_gate) -> UIApp:
     sounds_dir = pathlib.Path(__file__).resolve().parents[1] / "sounds"
@@ -48,10 +50,16 @@ def build_networked_ui_app(home_gate) -> UIApp:
         holder["remote"] = remote
         return detector
 
+    def move_log_lines():
+        remote = holder.get("remote")
+        return [] if remote is None else remote.move_log.lines()
+
     def renderer_factory(asset_loader, window, cell_size):
         return Renderer(
             asset_loader, window, cell_size,
             overlay_provider=lambda: overlay_from_controller(holder.get("remote")),
+            panel_width=MOVE_LOG_PANEL_WIDTH_PX,
+            move_log_provider=move_log_lines,
         )
 
     return UIApp(

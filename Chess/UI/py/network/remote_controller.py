@@ -10,6 +10,7 @@ from adapter.controller import GameSnapshot
 from config import CELL_SIZE_PX
 from netcommon.coordinates import pixel_to_rowcol
 from netcommon.messages import wire_to_snapshot
+from network.move_log import MoveLog
 
 logger = logging.getLogger("client.remote")
 
@@ -28,6 +29,7 @@ class RemoteController:
         self.role: str | None = None
         self.room_id: str | None = None
         self.opponent_left_seconds: int | None = None
+        self.move_log = MoveLog()
         self._sound_detector = None
         self._ws.set_message_handler(self._on_message)
 
@@ -35,11 +37,22 @@ class RemoteController:
 
     def move(self, x: int, y: int) -> None:
         row, col = pixel_to_rowcol(x, y, CELL_SIZE_PX)
+        if not self._is_on_board(row, col):
+            return  # click landed on the side panel, not the board
         self._ws.send({"type": "move_click", "row": row, "col": col})
 
     def jump(self, x: int, y: int) -> None:
         row, col = pixel_to_rowcol(x, y, CELL_SIZE_PX)
+        if not self._is_on_board(row, col):
+            return
         self._ws.send({"type": "jump_click", "row": row, "col": col})
+
+    def _is_on_board(self, row: int, col: int) -> bool:
+        with self._lock:
+            board = self._latest_snapshot.board
+        if not board:
+            return True  # board not known yet -- don't drop the click
+        return 0 <= row < len(board) and 0 <= col < len(board[0])
 
     def update(self, dt_ms: float) -> None:
         # The server owns the clock and pushes state on its own tick;
@@ -59,6 +72,7 @@ class RemoteController:
             with self._lock:
                 prev = self._latest_snapshot
                 self._latest_snapshot = snapshot
+            self.move_log.observe(prev, snapshot)
             if self._sound_detector is not None:
                 self._sound_detector.on_new_snapshot(prev, snapshot)
         elif msg_type == "role_assigned":

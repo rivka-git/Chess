@@ -17,6 +17,7 @@ from server.matchmaking.matchmaking_queue import MatchmakingQueue
 from server.net.connection import ClientConnection
 from server.net.dispatch import Dispatcher
 from server.persistence.db import ensure_schema
+from server.persistence.game_repository import GameRepository
 from server.persistence.player_repository import PlayerRepository
 from server.rooms.room_service import RoomService
 
@@ -47,16 +48,18 @@ async def _cancel_background_tasks():
         await asyncio.gather(*pending, return_exceptions=True)
 
 
-def make_dispatcher():
-    conn = sqlite3.connect(":memory:")
-    conn.row_factory = sqlite3.Row
-    ensure_schema(conn)
+def make_dispatcher(conn=None):
+    if conn is None:
+        conn = sqlite3.connect(":memory:")
+        conn.row_factory = sqlite3.Row
+        ensure_schema(conn)
     event_bus = EventBus()
     auth_service = AuthService(PlayerRepository(conn), PasswordHasher(iterations=1_000))
     session_manager = SessionManager(event_bus)
     matchmaker = MatchmakerService(MatchmakingQueue(), session_manager, event_bus)
     room_service = RoomService(session_manager)
-    return Dispatcher(session_manager, auth_service, matchmaker, room_service, event_bus)
+    game_repository = GameRepository(conn)
+    return Dispatcher(session_manager, auth_service, matchmaker, room_service, event_bus, game_repository)
 
 
 def make_connection():
@@ -252,6 +255,25 @@ async def test_move_click_after_being_seated_is_routed_to_session_not_rejected()
     # non-error path (broadcasts happen from the tick loop) -- so no new
     # message means it was routed past the auth/session checks, not rejected.
     assert len(alice.websocket.sent) == sent_before
+
+
+@pytest.mark.asyncio
+async def test_get_history_returns_the_players_games():
+    conn = sqlite3.connect(":memory:")
+    conn.row_factory = sqlite3.Row
+    ensure_schema(conn)
+    GameRepository(conn).create_game("room-1", "alice", "bob", "t1")
+    GameRepository(conn).create_game("room-2", "carol", "dave", "t2")
+    dispatcher = make_dispatcher(conn)
+    connection = make_connection()
+    await login(dispatcher, connection, "alice")
+
+    await dispatcher.on_message(connection, {"type": "get_history"})
+
+    reply = connection.websocket.sent[-1]
+    assert reply["type"] == "history"
+    assert [g["room_id"] for g in reply["games"]] == ["room-1"]
+    assert reply["games"][0]["white"] == "alice"
 
 
 @pytest.mark.asyncio

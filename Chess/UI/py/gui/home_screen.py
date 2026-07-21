@@ -21,8 +21,9 @@ def prompt_home_action(username: str, rating: int) -> str:
 
     buttons = tk.Frame(root)
     buttons.pack(padx=24, pady=(0, 16))
-    tk.Button(buttons, text="Play", width=12, command=lambda: choose("play")).pack(side=tk.LEFT, padx=6)
-    tk.Button(buttons, text="Room", width=12, command=lambda: choose("room")).pack(side=tk.LEFT, padx=6)
+    tk.Button(buttons, text="Play", width=10, command=lambda: choose("play")).pack(side=tk.LEFT, padx=6)
+    tk.Button(buttons, text="Room", width=10, command=lambda: choose("room")).pack(side=tk.LEFT, padx=6)
+    tk.Button(buttons, text="History", width=10, command=lambda: choose("history")).pack(side=tk.LEFT, padx=6)
 
     root.protocol("WM_DELETE_WINDOW", lambda: choose("quit"))
     root.mainloop()
