@@ -21,6 +21,9 @@ def has_promotion(before, after) -> bool:
     return False
 
 
+_COLOR_NAMES = {"w": "white", "b": "black"}
+
+
 def winner_color(snapshot) -> str | None:
     tokens = {piece.token for row in snapshot.board for piece in row if piece is not None}
     if "wK" in tokens and "bK" not in tokens:
@@ -28,3 +31,11 @@ def winner_color(snapshot) -> str | None:
     if "bK" in tokens and "wK" not in tokens:
         return "b"
     return None
+
+
+def winner_name(snapshot) -> str | None:
+    """The winner as "white"/"black"/None -- the canonical form used in the
+    GAME_ENDED payload (shared with the resignation path) so rating/history
+    handle every ending uniformly."""
+    color = winner_color(snapshot)
+    return None if color is None else _COLOR_NAMES[color]

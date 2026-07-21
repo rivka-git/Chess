@@ -13,6 +13,9 @@ class FakeWsClient:
     def start(self, on_message):
         self._on_message = on_message
 
+    def set_message_handler(self, on_message):
+        self._on_message = on_message
+
     def send(self, message):
         self.sent.append(message)
 

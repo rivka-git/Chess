@@ -39,4 +39,5 @@ class ClickHandler:
                 "start": new_move.start,
                 "end": new_move.end,
                 "color": color,
+                "clock_tick": new_move.start_clock,
             })

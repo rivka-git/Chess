@@ -15,7 +15,8 @@ class SessionManager:
         return self._sessions.get(session_id)
 
     def get_or_create(self, session_id: str, board_text: str | None = None) -> GameSession:
-        if session_id not in self._sessions:
+        existing = self._sessions.get(session_id)
+        if existing is None or existing.is_over():
             self._sessions[session_id] = GameSession(session_id, self._event_bus, board_text=board_text)
         return self._sessions[session_id]
 

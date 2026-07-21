@@ -16,12 +16,23 @@ import logging
 import websockets
 from websockets.exceptions import ConnectionClosed
 
+from server.auth.auth_service import AuthService
+from server.auth.password_hasher import PasswordHasher
 from server.bus.event_bus import EventBus
-from server.bus.subscribers import MoveLogSubscriber
+from server.bus.subscribers import ActivityLogSubscriber, MoveLogSubscriber
 from server.game.session_manager import SessionManager
+from server.matchmaking.matchmaker_service import MatchmakerService
+from server.matchmaking.matchmaking_queue import MatchmakingQueue
 from server.net.connection import ClientConnection
 from server.net.dispatch import Dispatcher
-from server.server_config import HOST, PORT
+from server.persistence.db import connect
+from server.persistence.game_history_recorder import GameHistoryRecorder
+from server.persistence.game_repository import GameRepository
+from server.persistence.move_repository import MoveRepository
+from server.persistence.player_repository import PlayerRepository
+from server.rating.rating_service import RatingService
+from server.rooms.room_service import RoomService
+from server.server_config import DB_PATH, HOST, PORT
 
 logger = logging.getLogger("server.ws")
 
@@ -55,20 +66,39 @@ async def handle_connection(websocket, dispatcher: Dispatcher) -> None:
         await dispatcher.on_disconnect(connection)
 
 
-def build_dispatcher() -> Dispatcher:
-    # 🇮🇱 בונה את כל המערכת: EventBus → SessionManager → Dispatcher
+def build_dispatcher(db_path: str = DB_PATH) -> tuple[Dispatcher, MatchmakerService]:
+    # 🇮🇱 בונה את כל המערכת: EventBus → SessionManager, DB → AuthService/Rating/History → Dispatcher
     # EventBus = מערכת הודעות פנימית בין חלקי השרת
     # SessionManager = מנהל את כל המשחקים הפעילים
-    # Dispatcher = "שוטר תנועה" שמנתב הודעות לסשן הנכון
+    # AuthService = login/הרשמה אוטומטית, מגובה ב-SQLite
+    # MatchmakerService/RoomService = שיבוץ לחדר (Play אוטומטי / Room לפי מזהה)
+    # Dispatcher = "שוטר תנועה" שמנתב הודעות לשירות/לסשן הנכון
     event_bus = EventBus()
-    MoveLogSubscriber(event_bus)  # רושם subscriber שמדפיס לוג לכל אירוע
+    MoveLogSubscriber(event_bus)  # רושם subscriber שמדפיס לוג למהלכי המשחק
+    ActivityLogSubscriber(event_bus)  # רושם subscriber שמתעד login/matchmaking/rooms/ניתוקים
     session_manager = SessionManager(event_bus)
-    return Dispatcher(session_manager)
+    db_conn = connect(db_path)
+    player_repository = PlayerRepository(db_conn)
+    auth_service = AuthService(player_repository, PasswordHasher())
+    RatingService(player_repository, event_bus)  # מעדכן ELO אוטומטית בסיום כל משחק
+    GameHistoryRecorder(GameRepository(db_conn), MoveRepository(db_conn), event_bus)  # שומר היסטוריית משחקים/מהלכים
+    matchmaker = MatchmakerService(MatchmakingQueue(), session_manager, event_bus)
+    room_service = RoomService(session_manager)
+    dispatcher = Dispatcher(session_manager, auth_service, matchmaker, room_service, event_bus)
+    return dispatcher, matchmaker
+
+
+async def _matchmaking_sweep_loop(matchmaker: MatchmakerService) -> None:
+    # 🇮🇱 כל שנייה בודק אם מישהו חיכה יותר מדי זמן ל-Play ושולח לו no_match_found
+    while True:
+        await asyncio.sleep(1)
+        await matchmaker.sweep_expired()
 
 
 async def run_server(host: str = HOST, port: int = PORT) -> None:
     # 🇮🇱 הפונקציה הראשית של השרת — מאזינה לחיבורים ורצה לנצח (עד שמכבים אותה)
-    dispatcher = build_dispatcher()
+    dispatcher, matchmaker = build_dispatcher()
+    asyncio.create_task(_matchmaking_sweep_loop(matchmaker))
 
     async def handler(websocket):
         await handle_connection(websocket, dispatcher)

@@ -26,8 +26,12 @@ from server.net.ws_server import run_server  # noqa: E402
 
 
 def main() -> None:
-    # מגדיר את רמת הלוגים ל-INFO — יציג הודעות מידע, אזהרות, ושגיאות בקונסול
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    # מגדיר לוגים גם לקונסול וגם לקובץ server.log — כל פעילות ה-client/server נשמרת
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        handlers=[logging.StreamHandler(), logging.FileHandler(_CHESS_ROOT / "server.log", encoding="utf-8")],
+    )
     # מריץ את פונקציית השרת האסינכרונית run_server() עד שהשרת נסגר
     asyncio.run(run_server())
 

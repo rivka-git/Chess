@@ -34,6 +34,11 @@ class WsClient:
         self._thread.start()
         self._ready.wait(timeout=10)
 
+    def set_message_handler(self, on_message: Callable[[dict], None]) -> None:
+        """Swaps the callback for an already-started connection (e.g. handing
+        off from the login handshake to the in-game controller)."""
+        self._on_message = on_message
+
     def send(self, message: dict) -> None:
         if self._loop is None or self._websocket is None:
             logger.warning("send() called before connection is ready: %r", message)

@@ -62,6 +62,19 @@ class SoundEventDetector:
         self._controller.update(dt_ms)
 
         snapshot_after = self._controller.get_snapshot()
+        self._check_state_sounds(snapshot_before, snapshot_after, pieces_before, game_over_before)
+
+    def on_new_snapshot(self, snapshot_before, snapshot_after) -> None:
+        """Called by RemoteController when a new server snapshot arrives."""
+        if len(snapshot_after.pending_moves) > len(snapshot_before.pending_moves):
+            self._sounds.play_move()
+        self._check_state_sounds(
+            snapshot_before, snapshot_after,
+            self._count_pieces(snapshot_before),
+            snapshot_before.game_over,
+        )
+
+    def _check_state_sounds(self, snapshot_before, snapshot_after, pieces_before, game_over_before) -> None:
         if self._count_pieces(snapshot_after) < pieces_before:
             self._sounds.play_capture()
         if self._has_promotion(snapshot_before, snapshot_after):

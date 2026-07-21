@@ -9,6 +9,7 @@ from server.bus import events
 from server.bus.event_bus import EventBus
 
 logger = logging.getLogger("server.movelog")
+activity_logger = logging.getLogger("server.activity")
 
 
 class MoveLogSubscriber:
@@ -49,4 +50,41 @@ class MoveLogSubscriber:
         logger.info(
             "Game ended: room=%s winner=%s reason=%s",
             payload.get("room_id"), payload.get("winner"), payload.get("reason"),
+        )
+
+
+class ActivityLogSubscriber:
+    """Writes a log line for each non-move activity event (login, matchmaking,
+    rooms, disconnects) so all client/server activity is traceable through the
+    same Observer mechanism."""
+
+    def __init__(self, event_bus: EventBus) -> None:
+        event_bus.subscribe(events.LOGIN_SUCCEEDED, self._on_login)
+        event_bus.subscribe(events.MATCH_FOUND, self._on_match_found)
+        event_bus.subscribe(events.ROOM_CREATED, self._on_room_created)
+        event_bus.subscribe(events.ROOM_JOINED, self._on_room_joined)
+        event_bus.subscribe(events.PLAYER_DISCONNECTED, self._on_player_disconnected)
+
+    def _on_login(self, payload: dict) -> None:
+        activity_logger.info("Login: username=%s rating=%s", payload.get("username"), payload.get("rating"))
+
+    def _on_match_found(self, payload: dict) -> None:
+        activity_logger.info(
+            "Match found: room=%s white=%s black=%s",
+            payload.get("room_id"), payload.get("white"), payload.get("black"),
+        )
+
+    def _on_room_created(self, payload: dict) -> None:
+        activity_logger.info("Room created: room=%s by=%s", payload.get("room_id"), payload.get("username"))
+
+    def _on_room_joined(self, payload: dict) -> None:
+        activity_logger.info(
+            "Room joined: room=%s username=%s as=%s",
+            payload.get("room_id"), payload.get("username"), payload.get("role"),
+        )
+
+    def _on_player_disconnected(self, payload: dict) -> None:
+        activity_logger.info(
+            "Player disconnected: room=%s username=%s color=%s",
+            payload.get("room_id"), payload.get("username"), payload.get("color"),
         )

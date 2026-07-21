@@ -5,10 +5,10 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from netcommon.messages import snapshot_to_wire
 from server.bus import events
 from server.bus.event_bus import EventBus
-from server.game.snapshot_events import count_pieces, has_promotion, winner_color
+from server.game.broadcaster import broadcast_state
+from server.game.snapshot_events import count_pieces, has_promotion, winner_name
 from server.server_config import TICK_MS
 
 logger = logging.getLogger("server.session")
@@ -26,6 +26,10 @@ class TickLoop:
 
     def start(self) -> None:
         self._task = asyncio.create_task(self._run())
+
+    def stop(self) -> None:
+        if self._task is not None:
+            self._task.cancel()
 
     async def _run(self) -> None:
         while True:
@@ -46,14 +50,14 @@ class TickLoop:
         if not before.game_over and after.game_over:
             self._event_bus.publish(events.GAME_ENDED, {
                 "room_id": self._session_id,
-                "winner": winner_color(after),
+                "winner": winner_name(after),
                 "reason": "king_captured",
+                "white": getattr(self._connections.get("w"), "username", None),
+                "black": getattr(self._connections.get("b"), "username", None),
             })
 
     async def _broadcast(self) -> None:
-        for color, connection in list(self._connections.items()):
-            snapshot = self._controller.get_snapshot(viewer_color=color)
-            try:
-                await connection.send_json({"type": "state", "snapshot": snapshot_to_wire(snapshot)})
-            except Exception:
-                logger.exception("Failed to broadcast state to %s", color)
+        await broadcast_state(
+            self._connections,
+            lambda color: self._controller.get_snapshot(viewer_color=color),
+        )

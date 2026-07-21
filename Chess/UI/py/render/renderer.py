@@ -5,10 +5,13 @@ from controls.window import Window
 
 
 class Renderer:
-    def __init__(self, asset_loader: AssetLoader, window: Window, cell_size: int):
+    def __init__(self, asset_loader: AssetLoader, window: Window, cell_size: int, overlay_provider=None):
         self._asset_loader = asset_loader
         self._window = window
         self._cell_size = cell_size
+        # Optional callable returning a HudOverlay each frame (room id +
+        # disconnect countdown). None in the local single-player build.
+        self._overlay_provider = overlay_provider
         import cv2
         board = asset_loader.board_img
         if board.img.shape[2] == 3:
@@ -24,6 +27,7 @@ class Renderer:
         self._draw_pieces(pieces)
         self._draw_move_hints(snapshot)
         self._draw_hud(snapshot)
+        self._draw_overlay(snapshot)
         self._present()
 
     def _reset_canvas(self) -> None:
@@ -45,6 +49,23 @@ class Renderer:
         if snapshot.game_over:
             h, w = canvas.img.shape[:2]
             canvas.put_text("GAME OVER", w // 4, h // 2, 2.0, color=(0, 0, 255, 255), thickness=3)
+
+    def _draw_overlay(self, snapshot) -> None:
+        if self._overlay_provider is None:
+            return
+        overlay = self._overlay_provider()
+        if overlay is None:
+            return
+        canvas = self._canvas
+        width = canvas.img.shape[1]
+        if overlay.room_id:
+            text = f"Room: {overlay.room_id}"
+            x = max(4, width // 2 - len(text) * 9)
+            canvas.put_text(text, x, 30, 0.7, color=(0, 220, 220, 255), thickness=2)
+        if overlay.countdown_seconds is not None and not snapshot.game_over:
+            text = f"Opponent left! Auto-resign in {overlay.countdown_seconds}s"
+            x = max(4, width // 2 - len(text) * 7)
+            canvas.put_text(text, x, 60, 0.8, color=(0, 0, 255, 255), thickness=2)
 
     def _draw_move_hints(self, snapshot) -> None:
         import cv2
