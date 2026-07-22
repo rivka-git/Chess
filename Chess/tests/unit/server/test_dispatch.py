@@ -8,18 +8,12 @@ import sqlite3
 import pytest
 import pytest_asyncio
 
-from server.auth.auth_service import AuthService
 from server.auth.password_hasher import PasswordHasher
-from server.bus.event_bus import EventBus
-from server.game.session_manager import SessionManager
-from server.matchmaking.matchmaker_service import MatchmakerService
-from server.matchmaking.matchmaking_queue import MatchmakingQueue
 from server.net.connection import ClientConnection
 from server.net.dispatch import Dispatcher
+from server.net.ws_server import AppFactory
 from server.persistence.db import ensure_schema
 from server.persistence.game_repository import GameRepository
-from server.persistence.player_repository import PlayerRepository
-from server.rooms.room_service import RoomService
 
 
 class FakeWebSocket:
@@ -49,17 +43,14 @@ async def _cancel_background_tasks():
 
 
 def make_dispatcher(conn=None):
-    if conn is None:
-        conn = sqlite3.connect(":memory:")
-        conn.row_factory = sqlite3.Row
-        ensure_schema(conn)
-    event_bus = EventBus()
-    auth_service = AuthService(PlayerRepository(conn), PasswordHasher(iterations=1_000))
-    session_manager = SessionManager(event_bus)
-    matchmaker = MatchmakerService(MatchmakingQueue(), session_manager, event_bus)
-    room_service = RoomService(session_manager)
-    game_repository = GameRepository(conn)
-    return Dispatcher(session_manager, auth_service, matchmaker, room_service, event_bus, game_repository)
+    factory = AppFactory(
+        db_path=":memory:",
+        password_hasher=PasswordHasher(iterations=1_000),
+    )
+    if conn is not None:
+        factory.db_conn = conn
+    dispatcher, _ = factory.build()
+    return dispatcher
 
 
 def make_connection():

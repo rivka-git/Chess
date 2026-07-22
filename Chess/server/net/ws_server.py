@@ -57,21 +57,31 @@ async def handle_connection(websocket, dispatcher: Dispatcher) -> None:
         await dispatcher.on_disconnect(connection)
 
 
-def build_dispatcher(db_path: str = DB_PATH) -> tuple[Dispatcher, MatchmakerService, sqlite3.Connection]:
-    event_bus = EventBus()
-    MoveLogSubscriber(event_bus)
-    ActivityLogSubscriber(event_bus)
-    session_manager = SessionManager(event_bus)
-    db_conn = connect(db_path)
-    player_repository = PlayerRepository(db_conn)
-    game_repository = GameRepository(db_conn)
-    auth_service = AuthService(player_repository, PasswordHasher())
-    RatingService(player_repository, event_bus)
-    GameHistoryRecorder(game_repository, MoveRepository(db_conn), event_bus)
-    matchmaker = MatchmakerService(MatchmakingQueue(), session_manager, event_bus)
-    room_service = RoomService(session_manager)
-    dispatcher = Dispatcher(session_manager, auth_service, matchmaker, room_service, event_bus, game_repository)
-    return dispatcher, matchmaker, db_conn
+class AppFactory:
+    def __init__(
+        self,
+        db_path: str = DB_PATH,
+        password_hasher: PasswordHasher | None = None,
+        queue: MatchmakingQueue | None = None,
+    ) -> None:
+        self.db_conn = connect(db_path)
+        self._password_hasher = password_hasher or PasswordHasher()
+        self._queue = queue or MatchmakingQueue()
+
+    def build(self) -> tuple[Dispatcher, MatchmakerService]:
+        event_bus = EventBus()
+        MoveLogSubscriber(event_bus)
+        ActivityLogSubscriber(event_bus)
+        session_manager = SessionManager(event_bus)
+        player_repository = PlayerRepository(self.db_conn)
+        game_repository = GameRepository(self.db_conn)
+        auth_service = AuthService(player_repository, self._password_hasher)
+        RatingService(player_repository, event_bus)
+        GameHistoryRecorder(game_repository, MoveRepository(self.db_conn), event_bus)
+        matchmaker = MatchmakerService(self._queue, session_manager, event_bus)
+        room_service = RoomService(session_manager)
+        dispatcher = Dispatcher(session_manager, auth_service, matchmaker, room_service, event_bus, game_repository)
+        return dispatcher, matchmaker
 
 
 async def _matchmaking_sweep_loop(matchmaker: MatchmakerService) -> None:
@@ -81,7 +91,8 @@ async def _matchmaking_sweep_loop(matchmaker: MatchmakerService) -> None:
 
 
 async def run_server(host: str = HOST, port: int = PORT) -> None:
-    dispatcher, matchmaker, db_conn = build_dispatcher()
+    factory = AppFactory()
+    dispatcher, matchmaker = factory.build()
     asyncio.create_task(_matchmaking_sweep_loop(matchmaker))
 
     async def handler(websocket):
@@ -92,4 +103,4 @@ async def run_server(host: str = HOST, port: int = PORT) -> None:
             logger.info("Server listening on %s:%s", host, port)
             await asyncio.Future()  # run forever
     finally:
-        db_conn.close()
+        factory.db_conn.close()
