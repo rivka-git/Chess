@@ -1,8 +1,8 @@
-"""Unit tests for realtime.motion and realtime.real_time_arbiter."""
+﻿"""Unit tests for realtime.motion and realtime.real_time_arbiter."""
 
-from model.board import Board
-from realtime.motion import GameTimer
-from realtime.real_time_arbiter import CollisionResolver
+from core.model.board import Board
+from core.realtime.motion import GameTimer
+from core.realtime.real_time_arbiter import CollisionResolver
 
 
 # --- GameTimer ---
@@ -78,7 +78,7 @@ def test_has_pending_moves():
 # --- CollisionResolver ---
 
 def test_no_collision():
-    from rules.rule_engine import MoveExecutor
+    from core.rules.rule_engine import MoveExecutor
     board = Board([["wR", ".", "."]])
     resolver = CollisionResolver()
     moves = resolver.resolve_collisions(board, [((0, 0), (0, 2), 2000, "wR")], [], MoveExecutor())
@@ -87,7 +87,7 @@ def test_no_collision():
 
 
 def test_collision_with_airborne():
-    from rules.rule_engine import MoveExecutor
+    from core.rules.rule_engine import MoveExecutor
     board = Board([["wR", ".", "bR"]])
     resolver = CollisionResolver()
     moves = resolver.resolve_collisions(

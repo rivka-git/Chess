@@ -1,15 +1,15 @@
-"""Core game engine: state management and game loop."""
+﻿"""Core game engine: state management and game loop."""
 
 from __future__ import annotations
 
-from model.board import Board
-from rules.rule_engine import MovementRules, MoveExecutor
-from realtime.motion import GameTimer
-from realtime.real_time_arbiter import CollisionResolver
-from realtime.in_transit_collision_resolver import InTransitCollisionResolver
-from realtime.move_arbiter import MoveArbiter
+from core.model.board import Board
+from core.rules.rule_engine import MovementRules, MoveExecutor
+from core.realtime.motion import GameTimer
+from core.realtime.real_time_arbiter import CollisionResolver
+from core.realtime.in_transit_collision_resolver import InTransitCollisionResolver
+from core.realtime.move_arbiter import MoveArbiter
 from input.input_handler import InputHandler
-from rules.post_move_effects import PostMoveEffects
+from core.rules.post_move_effects import PostMoveEffects
 
 
 class GameEndDetector:

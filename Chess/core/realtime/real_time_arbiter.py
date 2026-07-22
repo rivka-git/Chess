@@ -1,9 +1,9 @@
-"""Collision detection and resolution for chess moves and jumps."""
+﻿"""Collision detection and resolution for chess moves and jumps."""
 
 from __future__ import annotations
 
-from model.board import Board
-from rules.rule_engine import MoveExecutor
+from core.model.board import Board
+from core.rules.rule_engine import MoveExecutor
 
 
 class CollisionResolver:

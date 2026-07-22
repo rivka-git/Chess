@@ -1,9 +1,9 @@
-"""Tests for the board parser."""
+﻿"""Tests for the board parser."""
 
 import pytest
 
-from model.board import Board
-from ioutils.board_parser import parse_board
+from core.model.board import Board
+from core.ioutils.board_parser import parse_board
 
 
 def test_parse_board_with_piece_tokens() -> None:
@@ -37,12 +37,12 @@ def test_parse_board_empty_string():
 
 
 def test_parse_commands_empty_string():
-    from ioutils.board_parser import parse_commands
+    from core.ioutils.board_parser import parse_commands
     assert parse_commands("") == []
 
 
 def test_parse_commands_no_commands_section():
-    from ioutils.board_parser import parse_commands
+    from core.ioutils.board_parser import parse_commands
     assert parse_commands("Board:\nwK .\n") == []
 
 

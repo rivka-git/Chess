@@ -1,8 +1,8 @@
-"""Unit tests for rules.piece_rules - each piece in isolation."""
+﻿"""Unit tests for rules.piece_rules - each piece in isolation."""
 
 import pytest
-from model.board import Board
-from model.piece import King, Queen, Rook, Bishop, Knight, Pawn, Piece
+from core.model.board import Board
+from core.model.piece import King, Queen, Rook, Bishop, Knight, Pawn, Piece
 
 
 def make_board(rows):

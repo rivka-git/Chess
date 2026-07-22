@@ -1,4 +1,4 @@
-"""JSON (de)serialization for the client<->server wire protocol.
+﻿"""JSON (de)serialization for the client<->server wire protocol.
 
 `snapshot_to_wire` is duck-typed (accepts anything shaped like a
 `GameSnapshot`) so the server can call it without importing the UI layer's
@@ -50,7 +50,7 @@ def snapshot_to_wire(snapshot: Any) -> dict[str, Any]:
 
 
 def wire_to_snapshot(data: dict[str, Any]):
-    from engine.controller import GameSnapshot, JumpSnapshot, PendingMoveSnapshot, PieceSnapshot
+    from core.engine.controller import GameSnapshot, JumpSnapshot, PendingMoveSnapshot, PieceSnapshot
 
     board = [
         [None if cell is None else PieceSnapshot(**cell) for cell in row]

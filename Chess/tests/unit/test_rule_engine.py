@@ -1,7 +1,7 @@
-"""Unit tests for rules.rule_engine."""
+﻿"""Unit tests for rules.rule_engine."""
 
-from model.board import Board
-from rules.rule_engine import MovementRules, MoveExecutor
+from core.model.board import Board
+from core.rules.rule_engine import MovementRules, MoveExecutor
 
 
 def make_board(rows):
@@ -77,13 +77,13 @@ def test_no_promotion_mid_board():
 
 
 def test_game_end_detector_no_king_captured():
-    from engine.game_engine import GameEndDetector
+    from core.engine.game_engine import GameEndDetector
     board = make_board([["wK", "bK"]])
     assert not GameEndDetector().is_game_over(board)
 
 
 def test_game_end_detector_king_captured():
-    from engine.game_engine import GameEndDetector
+    from core.engine.game_engine import GameEndDetector
     board = make_board([["wK", "."]])
     assert GameEndDetector().is_game_over(board)
 

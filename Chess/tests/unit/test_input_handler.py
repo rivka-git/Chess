@@ -1,8 +1,8 @@
-"""Unit tests for input.input_handler."""
+﻿"""Unit tests for input.input_handler."""
 
-from model.board import Board
-from realtime.motion import GameTimer
-from rules.rule_engine import MovementRules
+from core.model.board import Board
+from core.realtime.motion import GameTimer
+from core.rules.rule_engine import MovementRules
 from input.input_handler import InputHandler
 
 

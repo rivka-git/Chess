@@ -1,7 +1,7 @@
-"""Unit tests for model.Board."""
+﻿"""Unit tests for model.Board."""
 
 import pytest
-from model.board import Board
+from core.model.board import Board
 
 
 def test_board_stores_rows():

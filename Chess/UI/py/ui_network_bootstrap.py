@@ -1,4 +1,4 @@
-"""Concrete wiring for a networked (multiplayer) UI, parallel to ui_bootstrap.py's
+﻿"""Concrete wiring for a networked (multiplayer) UI, parallel to ui_bootstrap.py's
 build_default_ui_app(). The only difference from the local build is what
 controller_factory produces: a RemoteController talking to a WebSocket
 server instead of a Controller wrapping a local GameEngine. UIRunner,
@@ -24,7 +24,7 @@ from config import CELL_SIZE_PX
 from controls.mouse_handler import MouseHandler
 from controls.window import Window
 from geometry.board_geometry import BoardGeometry
-from ioutils.board_parser import TextBoardParser
+from core.ioutils.board_parser import TextBoardParser
 from loop.ui_runner import UIRunner
 from network.remote_controller import RemoteController
 from render.hud_overlay import overlay_from_controller

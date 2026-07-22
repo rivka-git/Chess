@@ -1,13 +1,13 @@
-"""Tests for the controller behavior."""
+﻿"""Tests for the controller behavior."""
 
 import io
 import sys
 from unittest.mock import MagicMock
 
-from engine.game_engine import GameEngine, GameEndDetector
-from rules.rule_engine import MovementRules, MoveExecutor
-from realtime.motion import GameTimer
-from realtime.real_time_arbiter import CollisionResolver
+from core.engine.game_engine import GameEngine, GameEndDetector
+from core.rules.rule_engine import MovementRules, MoveExecutor
+from core.realtime.motion import GameTimer
+from core.realtime.real_time_arbiter import CollisionResolver
 import app
 
 

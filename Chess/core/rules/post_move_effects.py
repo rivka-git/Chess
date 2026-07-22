@@ -1,8 +1,8 @@
-"""Post-move side-effects applied after a piece reaches its destination."""
+﻿"""Post-move side-effects applied after a piece reaches its destination."""
 
 from __future__ import annotations
 
-from model.board import Board
+from core.model.board import Board
 
 
 class PostMoveEffects:
@@ -10,7 +10,7 @@ class PostMoveEffects:
 
     def __init__(self, registry=None) -> None:
         if registry is None:
-            from rules.rule_engine import MovementRules
+            from core.rules.rule_engine import MovementRules
             registry = MovementRules()._build_default_registry()
         self._registry = registry
 

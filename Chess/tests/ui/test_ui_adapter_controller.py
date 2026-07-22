@@ -1,10 +1,10 @@
-"""Unit tests for adapter.controller.Controller's color/viewer_color support
+﻿"""Unit tests for adapter.controller.Controller's color/viewer_color support
 (added so two independent network players can share one board without
 seeing or clobbering each other's selection)."""
 
 from adapter.controller import Controller
-from engine.game_engine import GameEngine
-from ioutils.board_parser import TextBoardParser
+from core.engine.game_engine import GameEngine
+from core.ioutils.board_parser import TextBoardParser
 
 SMALL_BOARD = """Board:
 wK .

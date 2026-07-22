@@ -1,4 +1,4 @@
-"""A single active game: seats players, delegates clicks and ticking."""
+﻿"""A single active game: seats players, delegates clicks and ticking."""
 
 from __future__ import annotations
 
@@ -9,9 +9,9 @@ _CHESS_ROOT = pathlib.Path(__file__).resolve().parents[2]
 if str(_CHESS_ROOT) not in sys.path:
     sys.path.insert(0, str(_CHESS_ROOT))
 
-from engine.controller import Controller  # noqa: E402
-from engine.game_engine import GameEngine  # noqa: E402
-from ioutils.board_parser import TextBoardParser  # noqa: E402
+from core.engine.controller import Controller  # noqa: E402
+from core.engine.game_engine import GameEngine  # noqa: E402
+from core.ioutils.board_parser import TextBoardParser  # noqa: E402
 from netcommon.defaults import DEFAULT_BOARD_TEXT  # noqa: E402
 from server.bus import events  # noqa: E402
 from server.bus.event_bus import EventBus  # noqa: E402

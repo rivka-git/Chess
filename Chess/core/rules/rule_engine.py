@@ -1,9 +1,9 @@
-"""Movement validation, piece registry, move execution, and pawn promotion."""
+﻿"""Movement validation, piece registry, move execution, and pawn promotion."""
 
 from __future__ import annotations
 
-from model.board import Board
-from model.piece import Piece, King, Queen, Rook, Bishop, Knight, Pawn
+from core.model.board import Board
+from core.model.piece import Piece, King, Queen, Rook, Bishop, Knight, Pawn
 
 
 class PieceRegistry:
@@ -66,5 +66,5 @@ class MovementRules:
         return piece_a != "." and piece_b != "." and piece_a[0] == piece_b[0]
 
     def apply_end_of_move(self, board: Board, end: tuple[int, int]) -> None:
-        from rules.post_move_effects import PostMoveEffects
+        from core.rules.post_move_effects import PostMoveEffects
         PostMoveEffects(self._registry).apply(board, end)

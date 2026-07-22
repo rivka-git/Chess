@@ -1,10 +1,10 @@
-"""Resolution of collisions between pieces moving simultaneously."""
+﻿"""Resolution of collisions between pieces moving simultaneously."""
 
 from __future__ import annotations
 
 from config import TRANSIT_DURATION_MS
-from model.board import Board
-from rules.rule_engine import MoveExecutor
+from core.model.board import Board
+from core.rules.rule_engine import MoveExecutor
 
 
 class InTransitCollisionResolver:

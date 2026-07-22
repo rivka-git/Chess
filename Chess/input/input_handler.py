@@ -1,10 +1,10 @@
-"""Handle user input for clicks and jumps."""
+﻿"""Handle user input for clicks and jumps."""
 
 from __future__ import annotations
 
-from model.board import Board
-from rules.rule_engine import MovementRules
-from realtime.motion import GameTimer
+from core.model.board import Board
+from core.rules.rule_engine import MovementRules
+from core.realtime.motion import GameTimer
 
 
 class InputHandler:

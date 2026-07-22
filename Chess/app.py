@@ -1,9 +1,9 @@
-"""Entry point for the board parsing program."""
+﻿"""Entry point for the board parsing program."""
 
 from __future__ import annotations
 
-from engine.game_engine import GameEngine
-from ioutils.board_parser import read_input, parse_commands, parse_command, TextBoardParser
+from core.engine.game_engine import GameEngine
+from core.ioutils.board_parser import read_input, parse_commands, parse_command, TextBoardParser
 from config import BOARD_FORMAT
 
 

@@ -1,4 +1,4 @@
-"""Parser utilities for simple board fixtures."""
+﻿"""Parser utilities for simple board fixtures."""
 
 from __future__ import annotations
 
@@ -6,9 +6,9 @@ import sys
 from abc import ABC, abstractmethod
 
 from config import CELL_SIZE_PX
-from model.board import Board
+from core.model.board import Board
 from netcommon.coordinates import pixel_to_rowcol
-from rules.rule_engine import PieceRegistry, MovementRules
+from core.rules.rule_engine import PieceRegistry, MovementRules
 
 
 class BoardParser(ABC):

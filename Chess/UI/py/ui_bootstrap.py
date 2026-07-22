@@ -1,4 +1,4 @@
-"""Concrete wiring for the UI dependency graph."""
+﻿"""Concrete wiring for the UI dependency graph."""
 from __future__ import annotations
 
 import pathlib
@@ -11,9 +11,9 @@ from assets.asset_loader import AssetLoader
 from config import CELL_SIZE_PX
 from controls.mouse_handler import MouseHandler
 from controls.window import Window
-from engine.game_engine import GameEngine
+from core.engine.game_engine import GameEngine
 from geometry.board_geometry import BoardGeometry
-from ioutils.board_parser import TextBoardParser
+from core.ioutils.board_parser import TextBoardParser
 from loop.ui_runner import UIRunner
 from render.renderer import Renderer
 from ui_app import UIApp

@@ -1,4 +1,4 @@
-"""Controller and snapshot dataclasses shared by the server and UI.
+﻿"""Controller and snapshot dataclasses shared by the server and UI.
 
 Lives in engine/ so both server/ and UI/py/ can import from here
 without either depending on the other.
@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from config import TRANSIT_DURATION_MS
-from engine.game_engine import GameEngine
+from core.engine.game_engine import GameEngine
 
 
 @dataclass

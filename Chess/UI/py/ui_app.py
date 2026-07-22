@@ -1,4 +1,4 @@
-"""UI application orchestration with dependency injection."""
+﻿"""UI application orchestration with dependency injection."""
 from __future__ import annotations
 
 import pathlib
@@ -12,8 +12,8 @@ for _path in (_ROOT, _UI_PY):
     if str(_path) not in sys.path:
         sys.path.insert(0, str(_path))
 
-from ioutils.board_parser import BoardParser
-from model.board import Board
+from core.ioutils.board_parser import BoardParser
+from core.model.board import Board
 
 
 class ControllerLike(Protocol):

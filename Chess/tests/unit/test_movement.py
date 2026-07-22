@@ -1,6 +1,6 @@
-"""Tests for basic piece movement rules."""
+﻿"""Tests for basic piece movement rules."""
 
-from engine.game_engine import GameEngine
+from core.engine.game_engine import GameEngine
 
 
 def test_king_can_move_one_step() -> None:
