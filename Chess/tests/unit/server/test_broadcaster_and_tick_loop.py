@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -11,22 +11,6 @@ from server.bus import events
 from server.bus.event_bus import EventBus
 from server.game.broadcaster import broadcast_state
 from server.game.tick_loop import TickLoop
-from server.server_config import TICK_MS
-
-
-def _patched_run(loop: TickLoop):
-    """Returns a version of _run() with sleep=0 so tests don't wait TICK_MS."""
-    async def _run():
-        while True:
-            await asyncio.sleep(0)
-            snapshot_before = loop._controller.get_snapshot()
-            loop._controller.update(TICK_MS)
-            snapshot_after = loop._controller.get_snapshot()
-            loop._publish_tick_events(snapshot_before, snapshot_after)
-            await loop._broadcast()
-            if snapshot_after.game_over:
-                break
-    return _run
 
 
 # --- broadcaster ---
@@ -109,18 +93,10 @@ async def test_tick_loop_publishes_game_ended_when_game_over():
     controller.update = MagicMock()
 
     conn = AsyncMock()
-    connections = {"w": conn}
+    loop = TickLoop("room1", controller, {"w": conn}, bus)
 
-    loop = TickLoop("room1", controller, connections, bus)
-    loop._run = _patched_run(loop)
-
-    task = asyncio.create_task(loop._run())
-    await asyncio.sleep(0.05)
-    task.cancel()
-    try:
-        await task
-    except asyncio.CancelledError:
-        pass
+    with patch("server.game.tick_loop.asyncio.sleep", new_callable=AsyncMock):
+        await loop._run()
 
     assert any(e.get("reason") == "king_captured" for e in ended)
 
@@ -140,15 +116,9 @@ async def test_tick_loop_publishes_piece_captured():
 
     conn = AsyncMock()
     loop = TickLoop("room1", controller, {"w": conn}, bus)
-    loop._run = _patched_run(loop)
 
-    task = asyncio.create_task(loop._run())
-    await asyncio.sleep(0.05)
-    task.cancel()
-    try:
-        await task
-    except asyncio.CancelledError:
-        pass
+    with patch("server.game.tick_loop.asyncio.sleep", new_callable=AsyncMock):
+        await loop._run()
 
     assert len(captured) >= 1
 
