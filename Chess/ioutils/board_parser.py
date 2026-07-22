@@ -5,7 +5,9 @@ from __future__ import annotations
 import sys
 from abc import ABC, abstractmethod
 
+from config import CELL_SIZE_PX
 from model.board import Board
+from netcommon.coordinates import pixel_to_rowcol
 from rules.rule_engine import PieceRegistry, MovementRules
 
 
@@ -80,11 +82,15 @@ class Command(ABC):
 
 
 class ClickCommand(Command):
+    """The script format addresses squares in pixels, so this command is where
+    that screen-space vocabulary is translated into board cells."""
+
     def __init__(self, x: int, y: int) -> None:
         self.x, self.y = x, y
 
     def execute(self, engine) -> None:
-        engine.click(self.x, self.y)
+        row, col = pixel_to_rowcol(self.x, self.y, CELL_SIZE_PX)
+        engine.click(row, col)
 
 
 class JumpCommand(Command):
@@ -92,7 +98,8 @@ class JumpCommand(Command):
         self.x, self.y = x, y
 
     def execute(self, engine) -> None:
-        engine.jump(self.x, self.y)
+        row, col = pixel_to_rowcol(self.x, self.y, CELL_SIZE_PX)
+        engine.jump(row, col)
 
 
 class WaitCommand(Command):

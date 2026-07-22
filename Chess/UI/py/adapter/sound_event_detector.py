@@ -6,8 +6,8 @@ from typing import Protocol
 
 
 class ControllerLike(Protocol):
-    def move(self, x: int, y: int) -> None: ...
-    def jump(self, x: int, y: int) -> None: ...
+    def move(self, row: int, col: int) -> None: ...
+    def jump(self, row: int, col: int) -> None: ...
     def update(self, dt_ms: float) -> None: ...
     def get_snapshot(self): ...
 
@@ -27,32 +27,30 @@ class SoundEventDetector:
         self,
         controller: ControllerLike,
         sound_effects: SoundEffectsLike,
-        cell_size: int,
     ) -> None:
         self._controller = controller
         self._sounds = sound_effects
-        self._cell_size = cell_size
 
     # --- ControllerLike delegation ---
 
     def get_snapshot(self):
         return self._controller.get_snapshot()
 
-    def move(self, x: int, y: int) -> None:
+    def move(self, row: int, col: int) -> None:
         snapshot_before = self._controller.get_snapshot()
         pending_before = len(snapshot_before.pending_moves)
         selected_before = snapshot_before.selected_position
 
-        self._controller.move(x, y)
+        self._controller.move(row, col)
 
         snapshot_after = self._controller.get_snapshot()
         if len(snapshot_after.pending_moves) > pending_before:
             self._sounds.play_move()
-        elif self._is_illegal_move(selected_before, snapshot_after, x, y):
+        elif self._is_illegal_move(selected_before, snapshot_after, row, col):
             self._sounds.play_illegal_move()
 
-    def jump(self, x: int, y: int) -> None:
-        self._controller.jump(x, y)
+    def jump(self, row: int, col: int) -> None:
+        self._controller.jump(row, col)
 
     def update(self, dt_ms: float) -> None:
         snapshot_before = self._controller.get_snapshot()
@@ -88,16 +86,14 @@ class SoundEventDetector:
         self,
         selected_before: tuple[int, int] | None,
         snapshot_after,
-        x: int,
-        y: int,
+        row: int,
+        col: int,
     ) -> bool:
         if selected_before is None:
             return False
         if snapshot_after.selected_position is not None:
             return False
         board = snapshot_after.board
-        row = y // self._cell_size
-        col = x // self._cell_size
         if not (0 <= row < len(board) and 0 <= col < len(board[0] if board else [])):
             return False
         return (row, col) != selected_before

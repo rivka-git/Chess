@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from config import CELL_SIZE_PX
 from model.board import Board
 from rules.rule_engine import MovementRules
 from realtime.motion import GameTimer
@@ -10,6 +9,11 @@ from realtime.motion import GameTimer
 
 class InputHandler:
     """Handle user input: clicks and jumps.
+
+    Coordinates are always board ``(row, col)`` cells -- never pixels.
+    Translating a screen position into a cell belongs to whichever adapter
+    owns a screen (the UI mouse handler, the CLI script parser); the board
+    itself has no notion of how large a cell is drawn.
 
     ``color`` is optional and defaults to ``None``, which preserves the
     original single shared-selection behavior (one mouse, implicitly
@@ -24,7 +28,6 @@ class InputHandler:
         self.movement_rules = movement_rules
         self.selected_position: tuple[int, int] | None = None
         self._selection_by_color: dict[str, tuple[int, int] | None] = {}
-        self.cell_size: int = CELL_SIZE_PX
 
     def selection_for(self, color: str | None) -> tuple[int, int] | None:
         if color is None:
@@ -40,14 +43,11 @@ class InputHandler:
     def handle_click(
         self,
         board: Board,
-        x: int,
-        y: int,
+        row: int,
+        col: int,
         on_move_requested: callable,
         color: str | None = None,
     ) -> None:
-        row = y // self.cell_size
-        col = x // self.cell_size
-
         if not self._is_inside_board(board, row, col):
             self._set_selection(color, None)
             return
@@ -108,14 +108,11 @@ class InputHandler:
     def handle_jump(
         self,
         board: Board,
-        x: int,
-        y: int,
+        row: int,
+        col: int,
         on_jump_requested: callable,
         color: str | None = None,
     ) -> None:
-        row = y // self.cell_size
-        col = x // self.cell_size
-
         if not self._is_inside_board(board, row, col):
             return
 

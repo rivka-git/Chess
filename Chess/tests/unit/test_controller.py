@@ -26,8 +26,8 @@ def make_engine(rows, **kwargs):
 def test_click_selects_friendly_piece() -> None:
     mock_rules = MagicMock(spec=MovementRules)
     engine = make_engine([["wK", "."], [".", "bR"]], movement_rules=mock_rules)
-    engine.click(50, 50)
-    engine.click(150, 50)
+    engine.click(0, 0)
+    engine.click(0, 1)
     engine.wait(1000)
     assert engine.print_board() == ". wK\n. bR"
 
@@ -37,8 +37,8 @@ def test_click_on_empty_cell_requests_move() -> None:
     mock_rules.is_legal_move.return_value = True
     mock_rules.is_same_color.return_value = False
     engine = make_engine([["wK", "."], [".", "bR"]], movement_rules=mock_rules)
-    engine.click(50, 50)
-    engine.click(150, 50)
+    engine.click(0, 0)
+    engine.click(0, 1)
     engine.wait(1000)
     assert engine.print_board() == ". wK\n. bR"
 
@@ -46,7 +46,7 @@ def test_click_on_empty_cell_requests_move() -> None:
 def test_click_outside_board_is_ignored() -> None:
     mock_rules = MagicMock(spec=MovementRules)
     engine = make_engine([["wK", "."], [".", "bR"]], movement_rules=mock_rules)
-    engine.click(1000, 1000)
+    engine.click(10, 10)
     assert engine.print_board() == "wK .\n. bR"
 
 
@@ -54,11 +54,11 @@ def test_jump_ignored_after_game_over():
     mock_detector = MagicMock(spec=GameEndDetector)
     mock_detector.is_game_over.return_value = True
     engine = make_engine([["wR", "bK", "."]], game_end_detector=mock_detector)
-    engine.click(50, 50)
-    engine.click(150, 50)
+    engine.click(0, 0)
+    engine.click(0, 1)
     engine.wait(1000)
     board_before = engine.print_board()
-    engine.jump(250, 50)
+    engine.jump(0, 2)
     assert engine.print_board() == board_before
 
 
@@ -72,8 +72,8 @@ def test_game_over_detected_via_mock_end_detector() -> None:
     mock_detector = MagicMock(spec=GameEndDetector)
     mock_detector.is_game_over.return_value = True
     engine = make_engine([["wR", "bK"]], game_end_detector=mock_detector)
-    engine.click(50, 50)
-    engine.click(150, 50)
+    engine.click(0, 0)
+    engine.click(0, 1)
     engine.wait(1000)
     assert engine.game_over
 
@@ -82,8 +82,8 @@ def test_collision_resolver_called_via_mock() -> None:
     mock_resolver = MagicMock(spec=CollisionResolver)
     mock_resolver.resolve_collisions.return_value = []
     engine = make_engine([["wR", "."]], collision_resolver=mock_resolver)
-    engine.click(50, 50)
-    engine.click(150, 50)
+    engine.click(0, 0)
+    engine.click(0, 1)
     engine.wait(1000)
     mock_resolver.resolve_collisions.assert_called_once()
 

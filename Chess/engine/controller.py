@@ -52,27 +52,11 @@ class Controller:
     def __init__(self, engine: GameEngine) -> None:
         self._engine = engine
 
-    def move(self, x: int, y: int, color: str | None = None) -> None:
-        self._engine.click(x, y, color=color)
+    def move(self, row: int, col: int, color: str | None = None) -> None:
+        self._engine.click(row, col, color=color)
 
-    def jump(self, x: int, y: int, color: str | None = None) -> None:
-        self._engine.jump(x, y, color=color)
-
-    def click(self, x: int, y: int) -> None:
-        # Backward-compatible alias for old input naming.
-        self.move(x, y)
-
-    def move_rowcol(self, row: int, col: int, cell_size: int, color: str | None = None) -> None:
-        """Server-facing: accepts grid coordinates instead of pixels."""
-        x = col * cell_size + cell_size // 2
-        y = row * cell_size + cell_size // 2
-        self._engine.click(x, y, color=color)
-
-    def jump_rowcol(self, row: int, col: int, cell_size: int, color: str | None = None) -> None:
-        """Server-facing: accepts grid coordinates instead of pixels."""
-        x = col * cell_size + cell_size // 2
-        y = row * cell_size + cell_size // 2
-        self._engine.jump(x, y, color=color)
+    def jump(self, row: int, col: int, color: str | None = None) -> None:
+        self._engine.jump(row, col, color=color)
 
     def update(self, dt_ms: float) -> None:
         self._engine.wait(int(dt_ms))

@@ -2,16 +2,8 @@
 
 from __future__ import annotations
 
-import pathlib
-import sys
-
-_CHESS_ROOT = pathlib.Path(__file__).resolve().parents[2]
-if str(_CHESS_ROOT) not in sys.path:
-    sys.path.insert(0, str(_CHESS_ROOT))
-
-from config import CELL_SIZE_PX  # noqa: E402
-from server.bus import events  # noqa: E402
-from server.bus.event_bus import EventBus  # noqa: E402
+from server.bus import events
+from server.bus.event_bus import EventBus
 
 
 class ClickHandler:
@@ -24,11 +16,11 @@ class ClickHandler:
 
     def handle_move(self, color: str, row: int, col: int) -> None:
         snapshot_before = self._controller.get_snapshot(viewer_color=color)
-        self._controller.move_rowcol(row, col, CELL_SIZE_PX, color=color)
+        self._controller.move(row, col, color=color)
         self._publish_if_queued(color, snapshot_before)
 
     def handle_jump(self, color: str, row: int, col: int) -> None:
-        self._controller.jump_rowcol(row, col, CELL_SIZE_PX, color=color)
+        self._controller.jump(row, col, color=color)
 
     def _publish_if_queued(self, color: str, snapshot_before) -> None:
         snapshot_after = self._controller.get_snapshot(viewer_color=color)

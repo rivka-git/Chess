@@ -30,14 +30,14 @@ class FakeWsClient:
 def test_move_sends_row_col_click():
     ws = FakeWsClient()
     controller = RemoteController(ws)
-    controller.move(150, 250)  # CELL_SIZE_PX=100 -> row=2, col=1
+    controller.move(2, 1)
     assert ws.sent == [{"type": "move_click", "row": 2, "col": 1}]
 
 
 def test_jump_sends_row_col_jump():
     ws = FakeWsClient()
     controller = RemoteController(ws)
-    controller.jump(50, 50)
+    controller.jump(0, 0)
     assert ws.sent == [{"type": "jump_click", "row": 0, "col": 0}]
 
 

@@ -55,20 +55,20 @@ class GameEngine:
     def from_board(cls, board: Board) -> GameEngine:
         return cls(rows=[list(row) for row in board.rows])
 
-    def click(self, x: int, y: int, color: str | None = None) -> None:
+    def click(self, row: int, col: int, color: str | None = None) -> None:
         self._apply_arrived_moves()
         if self.game_over:
             return
-        self.input_handler.handle_click(self.board, x, y, self._on_move_requested, color=color)
+        self.input_handler.handle_click(self.board, row, col, self._on_move_requested, color=color)
 
     def _on_move_requested(self, start: tuple[int, int], end: tuple[int, int]) -> None:
         self.game_timer.add_move(start, end, self.board.rows[start[0]][start[1]])
 
-    def jump(self, x: int, y: int, color: str | None = None) -> None:
+    def jump(self, row: int, col: int, color: str | None = None) -> None:
         self._apply_arrived_moves()
         if self.game_over:
             return
-        self.input_handler.handle_jump(self.board, x, y, self._on_jump_requested, color=color)
+        self.input_handler.handle_jump(self.board, row, col, self._on_jump_requested, color=color)
 
     def _on_jump_requested(self, position: tuple[int, int]) -> None:
         self.game_timer.add_airborne(position)

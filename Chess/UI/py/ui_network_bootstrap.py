@@ -45,7 +45,7 @@ def build_networked_ui_app(home_gate) -> UIApp:
     def controller_factory(_local_engine) -> SoundEventDetector:
         remote = RemoteController(home_gate.ws_client)
         home_gate.handoff(remote._on_message)
-        detector = SoundEventDetector(remote, sound_effects, CELL_SIZE_PX)
+        detector = SoundEventDetector(remote, sound_effects)
         remote._sound_detector = detector
         holder["remote"] = remote
         return detector
@@ -70,7 +70,9 @@ def build_networked_ui_app(home_gate) -> UIApp:
         geometry=BoardGeometry(CELL_SIZE_PX),
         animation_manager_factory=AnimationManager,
         window=Window(),
-        mouse_handler_factory=MouseHandler,
+        mouse_handler_factory=lambda window, controller: MouseHandler(
+            window, controller, CELL_SIZE_PX
+        ),
         renderer_factory=renderer_factory,
         runner_factory=UIRunner,
         cell_size_px=CELL_SIZE_PX,

@@ -7,8 +7,6 @@ import logging
 import threading
 
 from adapter.controller import GameSnapshot
-from config import CELL_SIZE_PX
-from netcommon.coordinates import pixel_to_rowcol
 from netcommon.messages import wire_to_snapshot
 from network.move_log import MoveLog
 
@@ -35,14 +33,12 @@ class RemoteController:
 
     # --- ControllerLike ---
 
-    def move(self, x: int, y: int) -> None:
-        row, col = pixel_to_rowcol(x, y, CELL_SIZE_PX)
+    def move(self, row: int, col: int) -> None:
         if not self._is_on_board(row, col):
             return  # click landed on the side panel, not the board
         self._ws.send({"type": "move_click", "row": row, "col": col})
 
-    def jump(self, x: int, y: int) -> None:
-        row, col = pixel_to_rowcol(x, y, CELL_SIZE_PX)
+    def jump(self, row: int, col: int) -> None:
         if not self._is_on_board(row, col):
             return
         self._ws.send({"type": "jump_click", "row": row, "col": col})

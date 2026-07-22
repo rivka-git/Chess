@@ -29,13 +29,14 @@ def build_default_ui_app() -> UIApp:
         controller_factory=lambda engine: SoundEventDetector(
             Controller(engine),
             sound_effects,
-            CELL_SIZE_PX,
         ),
         asset_loader=AssetLoader(),
         geometry=BoardGeometry(CELL_SIZE_PX),
         animation_manager_factory=AnimationManager,
         window=Window(),
-        mouse_handler_factory=MouseHandler,
+        mouse_handler_factory=lambda window, controller: MouseHandler(
+            window, controller, CELL_SIZE_PX
+        ),
         renderer_factory=Renderer,
         runner_factory=UIRunner,
         cell_size_px=CELL_SIZE_PX,
