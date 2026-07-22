@@ -6,6 +6,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import sqlite3
 
 import websockets
 from websockets.exceptions import ConnectionClosed
@@ -56,7 +57,7 @@ async def handle_connection(websocket, dispatcher: Dispatcher) -> None:
         await dispatcher.on_disconnect(connection)
 
 
-def build_dispatcher(db_path: str = DB_PATH) -> tuple[Dispatcher, MatchmakerService]:
+def build_dispatcher(db_path: str = DB_PATH) -> tuple[Dispatcher, MatchmakerService, sqlite3.Connection]:
     event_bus = EventBus()
     MoveLogSubscriber(event_bus)
     ActivityLogSubscriber(event_bus)
@@ -70,7 +71,7 @@ def build_dispatcher(db_path: str = DB_PATH) -> tuple[Dispatcher, MatchmakerServ
     matchmaker = MatchmakerService(MatchmakingQueue(), session_manager, event_bus)
     room_service = RoomService(session_manager)
     dispatcher = Dispatcher(session_manager, auth_service, matchmaker, room_service, event_bus, game_repository)
-    return dispatcher, matchmaker
+    return dispatcher, matchmaker, db_conn
 
 
 async def _matchmaking_sweep_loop(matchmaker: MatchmakerService) -> None:
@@ -80,12 +81,15 @@ async def _matchmaking_sweep_loop(matchmaker: MatchmakerService) -> None:
 
 
 async def run_server(host: str = HOST, port: int = PORT) -> None:
-    dispatcher, matchmaker = build_dispatcher()
+    dispatcher, matchmaker, db_conn = build_dispatcher()
     asyncio.create_task(_matchmaking_sweep_loop(matchmaker))
 
     async def handler(websocket):
         await handle_connection(websocket, dispatcher)
 
-    async with websockets.serve(handler, host, port):
-        logger.info("Server listening on %s:%s", host, port)
-        await asyncio.Future()  # run forever
+    try:
+        async with websockets.serve(handler, host, port):
+            logger.info("Server listening on %s:%s", host, port)
+            await asyncio.Future()  # run forever
+    finally:
+        db_conn.close()
