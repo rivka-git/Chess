@@ -35,7 +35,8 @@ def _configure_logging() -> None:
     # Per-pid file so two client windows launched from the same folder don't
     # clobber each other's log. File only, so it doesn't fight with the
     # login/home-screen prompts on the console.
-    log_path = _ROOT / f"client-{os.getpid()}.log"
+    log_path = _ROOT / "logs" / f"client-{os.getpid()}.log"
+    log_path.parent.mkdir(exist_ok=True)
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",

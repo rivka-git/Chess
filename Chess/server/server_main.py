@@ -26,11 +26,13 @@ from server.net.ws_server import run_server  # noqa: E402
 
 
 def main() -> None:
-    # מגדיר לוגים גם לקונסול וגם לקובץ server.log — כל פעילות ה-client/server נשמרת
+    # מגדיר לוגים גם לקונסול וגם לקובץ logs/server.log — כל פעילות ה-client/server נשמרת
+    _logs_dir = _CHESS_ROOT / "logs"
+    _logs_dir.mkdir(exist_ok=True)
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-        handlers=[logging.StreamHandler(), logging.FileHandler(_CHESS_ROOT / "server.log", encoding="utf-8")],
+        handlers=[logging.StreamHandler(), logging.FileHandler(_logs_dir / "server.log", encoding="utf-8")],
     )
     # מריץ את פונקציית השרת האסינכרונית run_server() עד שהשרת נסגר
     asyncio.run(run_server())
