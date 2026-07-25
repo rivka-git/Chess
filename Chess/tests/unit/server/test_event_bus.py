@@ -1,8 +1,8 @@
-"""Unit tests for server.bus.event_bus and server.bus.subscribers."""
+"""Unit tests for server.bus.event_bus and server.observability.subscribers."""
 
 from server.bus import events
 from server.bus.event_bus import EventBus
-from server.bus.subscribers import MoveLogSubscriber
+from server.observability.subscribers import MoveLogSubscriber
 
 
 def test_publish_calls_subscribed_handler():

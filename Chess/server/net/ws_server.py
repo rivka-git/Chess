@@ -14,7 +14,7 @@ from websockets.exceptions import ConnectionClosed
 from server.auth.auth_service import AuthService
 from server.auth.password_hasher import PasswordHasher
 from server.bus.event_bus import EventBus
-from server.bus.subscribers import ActivityLogSubscriber, MoveLogSubscriber
+from server.observability.subscribers import ActivityLogSubscriber, MoveLogSubscriber
 from server.game.session_manager import SessionManager
 from server.matchmaking.matchmaker_service import MatchmakerService
 from server.matchmaking.matchmaking_queue import MatchmakingQueue

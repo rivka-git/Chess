@@ -1,8 +1,8 @@
-"""Unit tests for server.bus.subscribers.ActivityLogSubscriber."""
+"""Unit tests for server.observability.subscribers.ActivityLogSubscriber."""
 
 from server.bus import events
 from server.bus.event_bus import EventBus
-from server.bus.subscribers import ActivityLogSubscriber
+from server.observability.subscribers import ActivityLogSubscriber
 
 
 def test_logs_login(caplog):

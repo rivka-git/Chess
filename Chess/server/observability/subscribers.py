@@ -1,5 +1,6 @@
-"""EventBus subscribers: concerns that react to game events without the
-game/session code needing to know they exist."""
+"""Log subscribers: write a log line for every game and activity event.
+Registered once at startup; the rest of the server does not know they exist.
+"""
 
 from __future__ import annotations
 
@@ -55,8 +56,7 @@ class MoveLogSubscriber:
 
 class ActivityLogSubscriber:
     """Writes a log line for each non-move activity event (login, matchmaking,
-    rooms, disconnects) so all client/server activity is traceable through the
-    same Observer mechanism."""
+    rooms, disconnects)."""
 
     def __init__(self, event_bus: EventBus) -> None:
         event_bus.subscribe(events.LOGIN_SUCCEEDED, self._on_login)
