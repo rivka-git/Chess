@@ -229,7 +229,7 @@ def test_moving_piece_cannot_jump() -> None:
     engine.click(0, 1)
     engine.jump(0, 0)
     engine.wait(1000)
-    assert engine.board.rows[0][1] == "wR"  # זז ליעד, לא קפץ
+    assert engine.board.rows[0][1] == "wR"  # moved to destination, did not jump
 
 
 def test_same_destination_collision_stops_both_at_last_legal_square() -> None:
