@@ -17,10 +17,11 @@ logger = logging.getLogger("server.session")
 class TickLoop:
     """Owns the background task that drives the game clock and pushes state."""
 
-    def __init__(self, session_id: str, controller, connections: dict, event_bus: EventBus) -> None:
+    def __init__(self, session_id: str, controller, connections: dict, spectators: list, event_bus: EventBus) -> None:
         self._session_id = session_id
         self._controller = controller
         self._connections = connections
+        self._spectators = spectators
         self._event_bus = event_bus
         self._task: asyncio.Task | None = None
 
@@ -60,4 +61,5 @@ class TickLoop:
         await broadcast_state(
             self._connections,
             lambda color: self._controller.get_snapshot(viewer_color=color),
+            self._spectators,
         )

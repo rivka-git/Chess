@@ -34,8 +34,9 @@ class GameSession:
         board = TextBoardParser().parse(board_text or DEFAULT_BOARD_TEXT)
         self._controller = Controller(GameEngine.from_board(board))
         self._connections: dict[str, object] = {}
+        self._spectators: list = []
         self._click_handler = ClickHandler(session_id, self._controller, event_bus)
-        self._tick_loop = TickLoop(session_id, self._controller, self._connections, event_bus)
+        self._tick_loop = TickLoop(session_id, self._controller, self._connections, self._spectators, event_bus)
         self._event_bus = event_bus
         self._resigned_winner: str | None = None
         self._disconnect_timers: dict[str, DisconnectTimer] = {}
@@ -50,6 +51,12 @@ class GameSession:
             self._connections["b"] = connection
             return "b"
         return None
+
+    def add_spectator(self, connection) -> None:
+        self._spectators.append(connection)
+
+    def remove_spectator(self, connection) -> None:
+        self._spectators = [c for c in self._spectators if c is not connection]
 
     def is_full(self) -> bool:
         return "w" in self._connections and "b" in self._connections
@@ -153,4 +160,4 @@ class GameSession:
 
     async def _resign_and_broadcast(self, color: str) -> None:
         self.resign(color)
-        await broadcast_state(self._connections, self.get_viewer_snapshot)
+        await broadcast_state(self._connections, self.get_viewer_snapshot, self._spectators)

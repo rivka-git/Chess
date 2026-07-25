@@ -93,7 +93,7 @@ class Dispatcher:
         if session is None:
             return
         if connection.is_spectator:
-            session.remove_connection(connection)
+            session.remove_spectator(connection)
         else:
             session.on_player_disconnected(connection)
 
@@ -185,6 +185,7 @@ class Dispatcher:
     async def _seat_as_spectator(self, session, connection: ClientConnection) -> None:
         connection.is_spectator = True
         connection.room_id = session.session_id
+        session.add_spectator(connection)
         await connection.send_json({"type": "spectating", "room_id": session.session_id})
         from netcommon.messages import snapshot_to_wire
         await connection.send_json({

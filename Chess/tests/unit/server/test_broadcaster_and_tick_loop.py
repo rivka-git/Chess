@@ -93,7 +93,7 @@ async def test_tick_loop_publishes_game_ended_when_game_over():
     controller.update = MagicMock()
 
     conn = AsyncMock()
-    loop = TickLoop("room1", controller, {"w": conn}, bus)
+    loop = TickLoop("room1", controller, {"w": conn}, [], bus)
 
     with patch("server.game.tick_loop.asyncio.sleep", new_callable=AsyncMock):
         await loop._run()
@@ -115,7 +115,7 @@ async def test_tick_loop_publishes_piece_captured():
     controller.update = MagicMock()
 
     conn = AsyncMock()
-    loop = TickLoop("room1", controller, {"w": conn}, bus)
+    loop = TickLoop("room1", controller, {"w": conn}, [], bus)
 
     with patch("server.game.tick_loop.asyncio.sleep", new_callable=AsyncMock):
         await loop._run()
@@ -126,7 +126,7 @@ async def test_tick_loop_publishes_piece_captured():
 def test_tick_loop_stop_cancels_task():
     bus = EventBus()
     controller = MagicMock()
-    loop = TickLoop("room1", controller, {}, bus)
+    loop = TickLoop("room1", controller, {}, [], bus)
     mock_task = MagicMock()
     loop._task = mock_task
     loop.stop()
@@ -135,5 +135,5 @@ def test_tick_loop_stop_cancels_task():
 
 def test_tick_loop_stop_with_no_task_does_not_raise():
     bus = EventBus()
-    loop = TickLoop("room1", MagicMock(), {}, bus)
+    loop = TickLoop("room1", MagicMock(), {}, [], bus)
     loop.stop()  # _task is None
