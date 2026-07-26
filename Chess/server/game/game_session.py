@@ -128,20 +128,6 @@ class GameSession:
             "black": getattr(self._connections.get("b"), "username", None),
         })
 
-    def on_player_reconnected(self, username: str, new_connection) -> str | None:
-        """Cancels the disconnect timer for a returning player and swaps in
-        their new connection. Returns the player's color, or None if they
-        had no active timer (i.e. they weren't the disconnected player)."""
-        color = self.color_of_username(username)
-        if color is None:
-            return None
-        timer = self._disconnect_timers.pop(color, None)
-        if timer is None:
-            return None
-        timer.cancel()
-        self._connections[color] = new_connection
-        return color
-
     # --- disconnect handling ---
 
     def on_player_disconnected(self, connection) -> None:
@@ -166,6 +152,20 @@ class GameSession:
         )
         self._disconnect_timers[color] = timer
         timer.start()
+
+    def on_player_reconnected(self, username: str, new_connection) -> str | None:
+        """Cancels the disconnect timer for a returning player and swaps in
+        their new connection. Returns the player's color, or None if they
+        had no active timer (i.e. they weren't the disconnected player)."""
+        color = self.color_of_username(username)
+        if color is None:
+            return None
+        timer = self._disconnect_timers.pop(color, None)
+        if timer is None:
+            return None
+        timer.cancel()
+        self._connections[color] = new_connection
+        return color
 
     async def _notify_countdown(self, opponent_color: str, seconds_remaining: int) -> None:
         opponent = self._connections.get(opponent_color)
