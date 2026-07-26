@@ -44,6 +44,14 @@ def _configure_logging() -> None:
     )
 
 
+def _parse_args() -> tuple[bool, str]:
+    args = sys.argv[1:]
+    use_gui = "--gui" in args
+    positional = [a for a in args if not a.startswith("--")]
+    server_uri = positional[0] if positional else DEFAULT_SERVER_URI
+    return use_gui, server_uri
+
+
 def _build_frontend(use_gui: bool):
     if use_gui:
         from gui.gui_home import GuiHomeFrontend
@@ -53,14 +61,9 @@ def _build_frontend(use_gui: bool):
 
 def main() -> None:
     _configure_logging()
-    args = sys.argv[1:]
-    use_gui = "--gui" in args
-    positional = [a for a in args if not a.startswith("--")]
-    server_uri = positional[0] if positional else DEFAULT_SERVER_URI
-
+    use_gui, server_uri = _parse_args()
     gate = HomeGate(WsClient(server_uri))
-    frontend = _build_frontend(use_gui)
-    if not run_home_flow(gate, frontend):
+    if not run_home_flow(gate, _build_frontend(use_gui)):
         print("Exiting.")
         return
     build_networked_ui_app(gate).run()
