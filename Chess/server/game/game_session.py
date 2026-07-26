@@ -72,6 +72,12 @@ class GameSession:
                 return color
         return None
 
+    def color_of_username(self, username: str) -> str | None:
+        for color, conn in self._connections.items():
+            if getattr(conn, "username", None) == username:
+                return color
+        return None
+
     # --- snapshots ---
 
     def is_over(self) -> bool:
@@ -121,6 +127,20 @@ class GameSession:
             "white": getattr(self._connections.get("w"), "username", None),
             "black": getattr(self._connections.get("b"), "username", None),
         })
+
+    def on_player_reconnected(self, username: str, new_connection) -> str | None:
+        """Cancels the disconnect timer for a returning player and swaps in
+        their new connection. Returns the player's color, or None if they
+        had no active timer (i.e. they weren't the disconnected player)."""
+        color = self.color_of_username(username)
+        if color is None:
+            return None
+        timer = self._disconnect_timers.pop(color, None)
+        if timer is None:
+            return None
+        timer.cancel()
+        self._connections[color] = new_connection
+        return color
 
     # --- disconnect handling ---
 

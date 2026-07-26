@@ -97,6 +97,24 @@ class Dispatcher:
         else:
             session.on_player_disconnected(connection)
 
+    # --- reconnect ---
+
+    async def _try_reconnect(self, connection: ClientConnection) -> None:
+        """After login, check if this player has an active disconnect timer
+        in any session. If so, cancel it and restore their seat."""
+        from netcommon.messages import snapshot_to_wire
+        for session in self._sessions._sessions.values():
+            color = session.on_player_reconnected(connection.username, connection)
+            if color is not None:
+                connection.color = color
+                connection.room_id = session.session_id
+                await connection.send_json({"type": "reconnected", "room_id": session.session_id})
+                await connection.send_json({
+                    "type": "state",
+                    "snapshot": snapshot_to_wire(session.get_viewer_snapshot(color)),
+                })
+                return
+
     # --- login ---
 
     async def _handle_login(self, connection: ClientConnection, message: dict) -> None:
@@ -127,6 +145,7 @@ class Dispatcher:
         await connection.send_json({
             "type": "login_ok", "username": player.username, "rating": player.rating,
         })
+        await self._try_reconnect(connection)
 
     # --- matchmaking / rooms (pre-seating) ---
 

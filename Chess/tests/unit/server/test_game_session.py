@@ -196,3 +196,89 @@ async def test_on_player_disconnected_after_start_publishes_event_and_arms_timer
     assert disconnects[0]["color"] == "w"
     assert disconnects[0]["username"] == "alice"
     assert not session.is_over()  # countdown running, not yet resigned
+
+
+# --- reconnect ---
+
+@pytest.mark.asyncio
+async def test_reconnect_cancels_timer_and_restores_seat(cancel_tasks):
+    session = GameSession("test-room", EventBus(), board_text=SMALL_BOARD)
+    alice = FakeConnection("alice")
+    bob = FakeConnection("bob")
+    session.seat_next(alice)
+    session.seat_next(bob)
+    session.start()
+
+    session.on_player_disconnected(alice)
+    assert "w" in session._disconnect_timers
+
+    new_alice = FakeConnection("alice")
+    color = session.on_player_reconnected("alice", new_alice)
+
+    assert color == "w"
+    assert "w" not in session._disconnect_timers
+    assert session._connections["w"] is new_alice
+    assert not session.is_over()
+
+
+@pytest.mark.asyncio
+async def test_reconnect_unknown_username_returns_none(cancel_tasks):
+    session = GameSession("test-room", EventBus(), board_text=SMALL_BOARD)
+    alice = FakeConnection("alice")
+    bob = FakeConnection("bob")
+    session.seat_next(alice)
+    session.seat_next(bob)
+    session.start()
+
+    result = session.on_player_reconnected("carol", FakeConnection("carol"))
+
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_reconnect_without_active_timer_returns_none(cancel_tasks):
+    session = GameSession("test-room", EventBus(), board_text=SMALL_BOARD)
+    alice = FakeConnection("alice")
+    bob = FakeConnection("bob")
+    session.seat_next(alice)
+    session.seat_next(bob)
+    session.start()
+
+    # alice never disconnected -- no timer
+    result = session.on_player_reconnected("alice", FakeConnection("alice"))
+
+    assert result is None
+
+
+# --- spectator ---
+
+def test_add_spectator_and_remove_spectator():
+    session = make_session()
+    spectator = FakeConnection("spectator")
+    session.add_spectator(spectator)
+    assert spectator in session._spectators
+    session.remove_spectator(spectator)
+    assert spectator not in session._spectators
+
+
+def test_spectator_gets_none_color_snapshot():
+    session = make_session()
+    spectator = FakeConnection("spectator")
+    session.add_spectator(spectator)
+    snapshot = session.get_viewer_snapshot(None)
+    assert snapshot is not None
+    assert snapshot.selected_position is None
+
+
+def test_spectator_does_not_affect_is_full():
+    session = make_session()
+    session.add_spectator(FakeConnection("spectator"))
+    assert not session.is_full()
+    session.seat_next(FakeConnection("alice"))
+    session.seat_next(FakeConnection("bob"))
+    assert session.is_full()
+
+
+def test_remove_nonexistent_spectator_is_safe():
+    session = make_session()
+    session.remove_spectator(FakeConnection("ghost"))  # should not raise
