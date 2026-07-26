@@ -151,18 +151,19 @@ class Dispatcher:
 
     async def _handle_pre_room(self, connection: ClientConnection, message: dict) -> None:
         msg_type = message.get("type")
-        if msg_type == "find_match":
-            await self._matchmaker.handle_find_match(connection)
-        elif msg_type == "create_room":
-            await self._handle_create_room(connection)
-        elif msg_type == "join_room":
-            await self._handle_join_room(connection, message)
-        elif msg_type == "get_history":
-            await self._handle_get_history(connection)
-        else:
+        handlers = {
+            "find_match": lambda: self._matchmaker.handle_find_match(connection),
+            "create_room": lambda: self._handle_create_room(connection),
+            "join_room": lambda: self._handle_join_room(connection, message),
+            "get_history": lambda: self._handle_get_history(connection),
+        }
+        handler = handlers.get(msg_type)
+        if handler is None:
             await connection.send_json({
                 "type": "error", "code": "unknown_type", "message": f"Unknown message type: {msg_type!r}",
             })
+            return
+        await handler()
 
     async def _handle_get_history(self, connection: ClientConnection) -> None:
         rows = self._games.get_games_for_player(connection.username)
