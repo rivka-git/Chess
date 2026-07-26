@@ -8,7 +8,7 @@ from core.realtime.motion import GameTimer
 from core.realtime.real_time_arbiter import CollisionResolver
 from core.realtime.in_transit_collision_resolver import InTransitCollisionResolver
 from core.realtime.move_arbiter import MoveArbiter
-from input.input_handler import InputHandler
+from core.engine.input_handler import InputHandler
 from core.rules.post_move_effects import PostMoveEffects
 
 

@@ -1,9 +1,9 @@
-﻿"""Unit tests for input.input_handler."""
+﻿"""Unit tests for core.engine.input_handler."""
 
 from core.model.board import Board
 from core.realtime.motion import GameTimer
 from core.rules.rule_engine import MovementRules
-from input.input_handler import InputHandler
+from core.engine.input_handler import InputHandler
 
 
 def make_handler():
