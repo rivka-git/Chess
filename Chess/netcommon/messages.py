@@ -4,11 +4,70 @@
 `GameSnapshot`) so the server can call it without importing the UI layer's
 dataclasses. `wire_to_snapshot` is used only by clients, which already have
 `UI/py` on `sys.path`, so it imports `adapter.controller` lazily.
+
+Incoming message schemas (Pydantic) are used by the server's Dispatcher to
+validate and parse every client message before any handler sees it.
 """
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Annotated, Literal, Union
+
+from pydantic import BaseModel, Field
+
+
+# ---------------------------------------------------------------------------
+# Incoming client message schemas
+# ---------------------------------------------------------------------------
+
+class LoginMsg(BaseModel):
+    type: Literal["login"]
+    username: str = Field(min_length=1)
+    password: str = Field(min_length=1)
+
+
+class FindMatchMsg(BaseModel):
+    type: Literal["find_match"]
+
+
+class CreateRoomMsg(BaseModel):
+    type: Literal["create_room"]
+
+
+class JoinRoomMsg(BaseModel):
+    type: Literal["join_room"]
+    room_id: str = Field(min_length=1)
+
+
+class GetHistoryMsg(BaseModel):
+    type: Literal["get_history"]
+
+
+class MoveClickMsg(BaseModel):
+    type: Literal["move_click"]
+    row: int
+    col: int
+
+
+class JumpClickMsg(BaseModel):
+    type: Literal["jump_click"]
+    row: int
+    col: int
+
+
+ClientMessage = Annotated[
+    Union[LoginMsg, FindMatchMsg, CreateRoomMsg, JoinRoomMsg, GetHistoryMsg, MoveClickMsg, JumpClickMsg],
+    Field(discriminator="type"),
+]
+
+
+def parse_client_message(data: dict) -> ClientMessage:
+    """Parse and validate a raw dict into a typed client message.
+
+    Raises ``pydantic.ValidationError`` on invalid input.
+    """
+    from pydantic import TypeAdapter
+    return TypeAdapter(ClientMessage).validate_python(data)
 
 
 def snapshot_to_wire(snapshot: Any) -> dict[str, Any]:

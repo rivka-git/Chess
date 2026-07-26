@@ -10,6 +10,13 @@ from __future__ import annotations
 
 import logging
 
+from pydantic import ValidationError
+
+from netcommon.messages import (
+    parse_client_message,
+    LoginMsg, FindMatchMsg, CreateRoomMsg, JoinRoomMsg, GetHistoryMsg,
+    MoveClickMsg, JumpClickMsg,
+)
 from server.auth.auth_service import AuthService
 from server.auth.exceptions import InvalidCredentialsError
 from server.bus import events
@@ -60,7 +67,15 @@ class Dispatcher:
         # before it is authenticated, matched, or seated into any room.
         pass
 
-    async def on_message(self, connection: ClientConnection, message: dict) -> None:
+    async def on_message(self, connection: ClientConnection, raw: dict) -> None:
+        try:
+            message = parse_client_message(raw)
+        except ValidationError as exc:
+            await connection.send_json({
+                "type": "error", "code": "bad_request", "message": exc.errors()[0]["msg"],
+            })
+            return
+
         if not connection.is_authenticated:
             await self._handle_login(connection, message)
             return
@@ -76,12 +91,11 @@ class Dispatcher:
             })
             return
 
-        msg_type = message.get("type")
-        if msg_type in ("move_click", "jump_click"):
-            await self._handle_click(session, connection, message, is_jump=msg_type == "jump_click")
+        if isinstance(message, (MoveClickMsg, JumpClickMsg)):
+            await self._handle_click(session, connection, message)
         else:
             await connection.send_json({
-                "type": "error", "code": "unknown_type", "message": f"Unknown message type: {msg_type!r}",
+                "type": "error", "code": "unknown_type", "message": f"Unexpected message type in-game: {message.type!r}",
             })
 
     async def on_disconnect(self, connection: ClientConnection) -> None:
@@ -117,21 +131,15 @@ class Dispatcher:
 
     # --- login ---
 
-    async def _handle_login(self, connection: ClientConnection, message: dict) -> None:
-        if message.get("type") != "login":
+    async def _handle_login(self, connection: ClientConnection, message) -> None:
+        if not isinstance(message, LoginMsg):
             await connection.send_json({
                 "type": "error", "code": "not_authenticated", "message": "Log in first.",
             })
             return
-        username, password = message.get("username"), message.get("password")
-        if not isinstance(username, str) or not isinstance(password, str) or not username or not password:
-            await connection.send_json({
-                "type": "error", "code": "bad_request", "message": "login requires non-empty username/password.",
-            })
-            return
 
         try:
-            player = self._auth.login_or_register(username, password)
+            player = self._auth.login_or_register(message.username, message.password)
         except InvalidCredentialsError:
             await connection.send_json({
                 "type": "login_failed", "code": "invalid_credentials", "message": "Wrong password.",
@@ -149,21 +157,19 @@ class Dispatcher:
 
     # --- matchmaking / rooms (pre-seating) ---
 
-    async def _handle_pre_room(self, connection: ClientConnection, message: dict) -> None:
-        msg_type = message.get("type")
-        handlers = {
-            "find_match": lambda: self._matchmaker.handle_find_match(connection),
-            "create_room": lambda: self._handle_create_room(connection),
-            "join_room": lambda: self._handle_join_room(connection, message),
-            "get_history": lambda: self._handle_get_history(connection),
-        }
-        handler = handlers.get(msg_type)
-        if handler is None:
+    async def _handle_pre_room(self, connection: ClientConnection, message) -> None:
+        if isinstance(message, FindMatchMsg):
+            await self._matchmaker.handle_find_match(connection)
+        elif isinstance(message, CreateRoomMsg):
+            await self._handle_create_room(connection)
+        elif isinstance(message, JoinRoomMsg):
+            await self._handle_join_room(connection, message)
+        elif isinstance(message, GetHistoryMsg):
+            await self._handle_get_history(connection)
+        else:
             await connection.send_json({
-                "type": "error", "code": "unknown_type", "message": f"Unknown message type: {msg_type!r}",
+                "type": "error", "code": "unknown_type", "message": f"Unknown message type: {message.type!r}",
             })
-            return
-        await handler()
 
     async def _handle_get_history(self, connection: ClientConnection) -> None:
         rows = self._games.get_games_for_player(connection.username)
@@ -179,18 +185,12 @@ class Dispatcher:
             "room_id": room_id, "username": connection.username,
         })
 
-    async def _handle_join_room(self, connection: ClientConnection, message: dict) -> None:
-        room_id = message.get("room_id")
-        if not isinstance(room_id, str) or not room_id:
-            await connection.send_json({
-                "type": "error", "code": "bad_request", "message": "join_room requires a room_id.",
-            })
-            return
+    async def _handle_join_room(self, connection: ClientConnection, message: JoinRoomMsg) -> None:
         try:
-            session = self._rooms.get_room(room_id)
+            session = self._rooms.get_room(message.room_id)
         except RoomNotFoundError:
             await connection.send_json({
-                "type": "error", "code": "room_not_found", "message": f"No room {room_id!r}.",
+                "type": "error", "code": "room_not_found", "message": f"No room {message.room_id!r}.",
             })
             return
 
@@ -198,7 +198,7 @@ class Dispatcher:
         if role is None:
             await self._seat_as_spectator(session, connection)
         self._event_bus.publish(events.ROOM_JOINED, {
-            "room_id": room_id, "username": connection.username,
+            "room_id": message.room_id, "username": connection.username,
             "role": role if role is not None else "spectator",
         })
 
@@ -215,19 +215,13 @@ class Dispatcher:
 
     # --- in-game ---
 
-    async def _handle_click(self, session, connection: ClientConnection, message: dict, is_jump: bool) -> None:
+    async def _handle_click(self, session, connection: ClientConnection, message: MoveClickMsg | JumpClickMsg) -> None:
         if connection.is_spectator or connection.color is None:
             await connection.send_json({
                 "type": "error", "code": "read_only", "message": "Spectators cannot move pieces.",
             })
             return
-        row, col = message.get("row"), message.get("col")
-        if not isinstance(row, int) or not isinstance(col, int):
-            await connection.send_json({
-                "type": "error", "code": "bad_request", "message": "move_click/jump_click require integer row/col.",
-            })
-            return
-        if is_jump:
-            session.handle_jump_click(connection.color, row, col)
+        if isinstance(message, JumpClickMsg):
+            session.handle_jump_click(connection.color, message.row, message.col)
         else:
-            session.handle_move_click(connection.color, row, col)
+            session.handle_move_click(connection.color, message.row, message.col)
