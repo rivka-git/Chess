@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from server.bus import events
 from server.bus.event_bus import EventBus
 from server.game.game_session import GameSession
 
@@ -10,6 +11,10 @@ class SessionManager:
     def __init__(self, event_bus: EventBus) -> None:
         self._event_bus = event_bus
         self._sessions: dict[str, GameSession] = {}
+        event_bus.subscribe(events.GAME_ENDED, self._on_game_ended)
+
+    def _on_game_ended(self, payload: dict) -> None:
+        self.remove(payload.get("room_id", ""))
 
     def get(self, session_id: str) -> GameSession | None:
         return self._sessions.get(session_id)
