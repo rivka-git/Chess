@@ -27,10 +27,10 @@ class GateLike(Protocol):
     def wait_for(self, *message_types: str) -> dict: ...
 
 
-def run_home_flow(gate: GateLike, frontend: HomeFrontend) -> bool:
+def run_home_flow(gate: GateLike, frontend: HomeFrontend, api_client=None) -> bool:
     if not _login(gate, frontend):
         return False
-    return _home(gate, frontend)
+    return _home(gate, frontend, api_client)
 
 
 def _login(gate: GateLike, frontend: HomeFrontend) -> bool:
@@ -47,7 +47,7 @@ def _login(gate: GateLike, frontend: HomeFrontend) -> bool:
         frontend.show_error(reply.get("message", "Login failed."))
 
 
-def _home(gate: GateLike, frontend: HomeFrontend) -> bool:
+def _home(gate: GateLike, frontend: HomeFrontend, api_client=None) -> bool:
     while True:
         action = frontend.choose_action()
         if action == "quit":
@@ -59,10 +59,15 @@ def _home(gate: GateLike, frontend: HomeFrontend) -> bool:
             if _room(gate, frontend):
                 return True
         elif action == "history":
-            frontend.show_history(_fetch_history(gate))
+            frontend.show_history(_fetch_history(gate, api_client))
 
 
-def _fetch_history(gate: GateLike) -> list[dict]:
+def _fetch_history(gate: GateLike, api_client=None) -> list[dict]:
+    # Prefer the API Gateway (HTTP) when available; fall back to WebSocket.
+    if api_client is not None:
+        username = getattr(gate, "username", None)
+        if username:
+            return api_client.get_history(username)
     gate.send({"type": "get_history"})
     return gate.wait_for("history").get("games", [])
 

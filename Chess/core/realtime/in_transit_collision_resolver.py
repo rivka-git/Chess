@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from config import TRANSIT_DURATION_MS
+from core.config import TRANSIT_DURATION_MS
 from core.model.board import Board
 from core.rules.rule_engine import MoveExecutor
 

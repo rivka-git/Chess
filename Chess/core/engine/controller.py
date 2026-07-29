@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from config import TRANSIT_DURATION_MS
+from core.config import TRANSIT_DURATION_MS
 from core.engine.game_engine import GameEngine
 
 

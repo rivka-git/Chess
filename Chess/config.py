@@ -1,5 +1,5 @@
 """Game configuration constants."""
 
-TRANSIT_DURATION_MS = 1000
-CELL_SIZE_PX = 100
+from core.config import TRANSIT_DURATION_MS, CELL_SIZE_PX  # single source of truth
+
 BOARD_FORMAT = "text"  # switch to "binary" when binary board support is added

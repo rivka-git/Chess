@@ -20,6 +20,7 @@ class HomeGate:
         self._awaiting: tuple[str, ...] = ()
         self._match: dict | None = None
         self._buffered: list[dict] = []
+        self.username: str | None = None
         ws_client.start(self._on_message)
 
     @property

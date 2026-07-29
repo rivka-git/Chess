@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from config import TRANSIT_DURATION_MS
+from core.config import TRANSIT_DURATION_MS
 
 
 class GameTimer:

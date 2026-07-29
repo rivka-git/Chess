@@ -23,12 +23,14 @@ for _path in (_ROOT, _UI_PY):
         sys.path.insert(0, str(_path))
 
 from console.console_home import ConsoleHomeFrontend  # noqa: E402
+from network.api_client import ApiClient  # noqa: E402
 from network.home_flow import run_home_flow  # noqa: E402
 from network.home_gate import HomeGate  # noqa: E402
 from network.ws_client import WsClient  # noqa: E402
+from ui_config import API_SERVER_URL, WS_SERVER_URI  # noqa: E402
 from ui_network_bootstrap import build_networked_ui_app  # noqa: E402
 
-DEFAULT_SERVER_URI = "ws://localhost:8765"
+DEFAULT_SERVER_URI = WS_SERVER_URI
 
 
 def _configure_logging() -> None:
@@ -63,7 +65,8 @@ def main() -> None:
     _configure_logging()
     use_gui, server_uri = _parse_args()
     gate = HomeGate(WsClient(server_uri))
-    if not run_home_flow(gate, _build_frontend(use_gui)):
+    api_client = ApiClient(API_SERVER_URL)
+    if not run_home_flow(gate, _build_frontend(use_gui), api_client):
         print("Exiting.")
         return
     build_networked_ui_app(gate).run()
