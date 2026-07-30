@@ -6,3 +6,5 @@ htmlcov/
 *.db
 *.log
 logs/
+.env
+*.sqlite3

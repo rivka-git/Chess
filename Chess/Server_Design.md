@@ -208,10 +208,7 @@ game_allocator/
 - מטפל בחיבור מחדש: שולח snapshot מלא
 - בסיום משחק: שומר היסטוריה ב-PostgreSQL, מפרסם GAME_ENDED, מוחק `room:shard:{room_id}` מ-Redis
 - **לא** מחשב ELO - זו אחריות של Rating Service
-
-**בעיית ריבוי מופעים:**
-כל room רץ על Shard אחד בלבד (Game Allocator מחליט).
-אין שני Shards שמריצים את אותו room.
+ 
 
 **Reconnect:**
 כששחקן מתחבר מחדש → WS Gateway קורא `room:shard:{room_id}` מ-Redis → שולח בקשת reconnect לShard הנכון → ה-Shard שולח snapshot מלא → ה-DisconnectTimer מבוטל.

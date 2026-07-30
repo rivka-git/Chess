@@ -16,12 +16,17 @@ from ws_gateway.net.ws_server import run_server  # noqa: E402
 
 
 def main() -> None:
-    _logs_dir = _CHESS_ROOT / "logs"
-    _logs_dir.mkdir(exist_ok=True)
+    handlers = [logging.StreamHandler()]
+    try:
+        _logs_dir = _CHESS_ROOT / "logs"
+        _logs_dir.mkdir(exist_ok=True)
+        handlers.append(logging.FileHandler(_logs_dir / "ws_gateway.log", encoding="utf-8"))
+    except OSError:
+        pass
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-        handlers=[logging.StreamHandler(), logging.FileHandler(_logs_dir / "ws_gateway.log", encoding="utf-8")],
+        handlers=handlers,
     )
     asyncio.run(run_server())
 

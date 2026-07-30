@@ -1,0 +1,137 @@
+from __future__ import annotations
+
+import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
+from ws_gateway.bus import events
+from ws_gateway.bus.event_bus import EventBus
+from ws_gateway.game.broadcaster import broadcast_state
+from ws_gateway.game.tick_loop import TickLoop
+
+
+# --- broadcaster ---
+
+@pytest.mark.asyncio
+async def test_broadcast_state_sends_to_all_connections():
+    conn_w = AsyncMock()
+    conn_b = AsyncMock()
+    connections = {"w": conn_w, "b": conn_b}
+
+    snapshot = MagicMock()
+    snapshot.clock = 0
+    snapshot.board = []
+    snapshot.pending_moves = []
+    snapshot.jumps = []
+    snapshot.selected_position = None
+    snapshot.legal_targets = []
+    snapshot.game_over = False
+
+    await broadcast_state(connections, lambda color: snapshot)
+
+    conn_w.send_json.assert_called_once()
+    conn_b.send_json.assert_called_once()
+    assert conn_w.send_json.call_args[0][0]["type"] == "state"
+    assert conn_b.send_json.call_args[0][0]["type"] == "state"
+
+
+@pytest.mark.asyncio
+async def test_broadcast_state_skips_failed_connection():
+    conn_ok = AsyncMock()
+    conn_bad = AsyncMock()
+    conn_bad.send_json.side_effect = Exception("disconnected")
+    connections = {"w": conn_ok, "b": conn_bad}
+
+    snapshot = MagicMock()
+    snapshot.clock = 0
+    snapshot.board = []
+    snapshot.pending_moves = []
+    snapshot.jumps = []
+    snapshot.selected_position = None
+    snapshot.legal_targets = []
+    snapshot.game_over = False
+
+    await broadcast_state(connections, lambda color: snapshot)
+
+    conn_ok.send_json.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_broadcast_state_empty_connections():
+    await broadcast_state({}, lambda color: MagicMock())
+
+
+# --- tick_loop ---
+
+def _make_snapshot(game_over=False, piece_count=2):
+    snapshot = MagicMock()
+    snapshot.game_over = game_over
+    pieces = [MagicMock() for _ in range(piece_count)]
+    snapshot.board = [pieces]
+    snapshot.pending_moves = []
+    snapshot.jumps = []
+    snapshot.selected_position = None
+    snapshot.legal_targets = []
+    snapshot.clock = 0
+    return snapshot
+
+
+@pytest.mark.asyncio
+async def test_tick_loop_publishes_game_ended_when_game_over():
+    bus = EventBus()
+    ended = []
+    bus.subscribe(events.GAME_ENDED, lambda p: ended.append(p))
+
+    snapshot_before = _make_snapshot(game_over=False)
+    snapshot_after = _make_snapshot(game_over=True)
+
+    controller = MagicMock()
+    controller.get_snapshot.side_effect = [snapshot_before, snapshot_after, snapshot_after]
+    controller.update = MagicMock()
+
+    conn = AsyncMock()
+    loop = TickLoop("room1", controller, {"w": conn}, [], bus)
+
+    with patch("ws_gateway.game.tick_loop.asyncio.sleep", new_callable=AsyncMock):
+        await loop._run()
+
+    assert any(e.get("reason") == "king_captured" for e in ended)
+
+
+@pytest.mark.asyncio
+async def test_tick_loop_publishes_piece_captured():
+    bus = EventBus()
+    captured = []
+    bus.subscribe(events.PIECE_CAPTURED, lambda p: captured.append(p))
+
+    snapshot_before = _make_snapshot(piece_count=2)
+    snapshot_after = _make_snapshot(piece_count=1, game_over=True)
+
+    controller = MagicMock()
+    controller.get_snapshot.side_effect = [snapshot_before, snapshot_after, snapshot_after]
+    controller.update = MagicMock()
+
+    conn = AsyncMock()
+    loop = TickLoop("room1", controller, {"w": conn}, [], bus)
+
+    with patch("ws_gateway.game.tick_loop.asyncio.sleep", new_callable=AsyncMock):
+        await loop._run()
+
+    assert len(captured) >= 1
+
+
+def test_tick_loop_stop_cancels_task():
+    bus = EventBus()
+    controller = MagicMock()
+    loop = TickLoop("room1", controller, {}, [], bus)
+    mock_task = MagicMock()
+    loop._task = mock_task
+    loop.stop()
+    mock_task.cancel.assert_called_once()
+
+
+def test_tick_loop_stop_with_no_task_does_not_raise():
+    bus = EventBus()
+    loop = TickLoop("room1", MagicMock(), {}, [], bus)
+    loop.stop()

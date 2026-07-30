@@ -1,0 +1,42 @@
+databases:
+  - name: chess-db
+    databaseName: chess
+    user: chess
+    plan: free
+
+services:
+  - type: redis
+    name: chess-redis
+    plan: free
+    ipAllowList: []
+
+  - type: web
+    name: chess-api
+    runtime: docker
+    dockerfilePath: ./api_gateway/Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: chess-db
+          property: connectionString
+
+  - type: web
+    name: chess-ws
+    runtime: docker
+    dockerfilePath: ./ws_gateway/Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: chess-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: chess-redis
+          type: redis
+          property: connectionString
+      - key: HEALTH_PORT
+        value: "8766"
