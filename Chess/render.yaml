@@ -14,7 +14,8 @@ services:
     name: chess-api
     runtime: docker
     dockerfilePath: ./api_gateway/Dockerfile
-    dockerContext: .
+    dockerContext: ./
+    rootDir: Chess
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -26,7 +27,8 @@ services:
     name: chess-ws
     runtime: docker
     dockerfilePath: ./ws_gateway/Dockerfile
-    dockerContext: .
+    dockerContext: ./
+    rootDir: Chess
     plan: free
     envVars:
       - key: DATABASE_URL
